@@ -13,6 +13,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { cn } from '@/lib/utils'
+import { ImportDialog } from '@/features/import/import-dialog'
 
 interface SidebarProps {
   activeSection: string
@@ -58,9 +59,7 @@ export function Sidebar({ activeSection, onSectionChange }: SidebarProps) {
 
       {/* Sidebar Footer - Import Project Button */}
       <div className="p-4 border-t border-border">
-        <Button className="w-full" size="sm">
-          Import Project
-        </Button>
+        <ImportDialog />
       </div>
     </div>
   )

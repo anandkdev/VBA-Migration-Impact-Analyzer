@@ -3,6 +3,7 @@
 import React from 'react'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { DashboardCard } from '@/features/dashboard/dashboard-card'
+import { useProjectStore } from '@/store/project-store'
 import {
   FileCode2,
   Boxes,
@@ -19,42 +20,64 @@ import {
   Search,
 } from 'lucide-react'
 
-const STAT_CARDS: Array<{
-  label: string
-  value: string
-  icon: typeof FileCode2
-}> = [
-  { label: 'Total Files', value: '0', icon: FileCode2 },
-  { label: 'Modules', value: '0', icon: Boxes },
-  { label: 'Classes', value: '0', icon: SquareCode },
-  { label: 'UserForms', value: '0', icon: FileText },
-  { label: 'Worksheets', value: '0', icon: Sheet },
-  { label: 'Procedures', value: '0', icon: Zap },
-  { label: 'Variables', value: '0', icon: Package },
-  { label: 'Queries', value: '0', icon: Database },
-  { label: 'Named Ranges', value: '0', icon: Grid3x3 },
-  { label: 'Total References', value: '0', icon: Grid3x3 },
-]
-
-const IMPACT_CARDS: Array<{
-  label: string
-  value: string
-  icon: typeof AlertTriangle
-  variant: 'destructive' | 'warning' | 'success'
-}> = [
-  { label: 'High Impact', value: '0', icon: AlertTriangle, variant: 'destructive' },
-  { label: 'Medium Impact', value: '0', icon: AlertCircle, variant: 'warning' },
-  { label: 'Low Impact', value: '0', icon: CheckCircle2, variant: 'success' },
-]
-
 export function Dashboard() {
+  const { files, modules, projectName } = useProjectStore()
+
+  // Calculate statistics
+  const stats = {
+    totalFiles: files.length,
+    modules: modules.filter((m) => m.type === 'Module').length,
+    classes: modules.filter((m) => m.type === 'Class').length,
+    forms: modules.filter((m) => m.type === 'Form').length,
+    worksheets: files.filter((f) => ['xlsm', 'xls', 'xlsx'].includes(f.type)).length,
+    procedures: modules.reduce((sum, m) => sum + m.procedures.length, 0),
+    variables: modules.reduce((sum, m) => sum + m.variables.length, 0),
+  }
+
+  const statCards: Array<{
+    label: string
+    value: string | number
+    icon: typeof FileCode2
+  }> = [
+    { label: 'Total Files', value: stats.totalFiles, icon: FileCode2 },
+    { label: 'Modules', value: stats.modules, icon: Boxes },
+    { label: 'Classes', value: stats.classes, icon: SquareCode },
+    { label: 'UserForms', value: stats.forms, icon: FileText },
+    { label: 'Worksheets', value: stats.worksheets, icon: Sheet },
+    { label: 'Procedures', value: stats.procedures, icon: Zap },
+    { label: 'Variables', value: stats.variables, icon: Package },
+    { label: 'Queries', value: '0', icon: Database },
+    { label: 'Named Ranges', value: '0', icon: Grid3x3 },
+    { label: 'Total References', value: '0', icon: Grid3x3 },
+  ]
+
+  const IMPACT_CARDS: Array<{
+    label: string
+    value: string
+    icon: typeof AlertTriangle
+    variant: 'destructive' | 'warning' | 'success'
+  }> = [
+    { label: 'High Impact', value: '0', icon: AlertTriangle, variant: 'destructive' },
+    { label: 'Medium Impact', value: '0', icon: AlertCircle, variant: 'warning' },
+    { label: 'Low Impact', value: '0', icon: CheckCircle2, variant: 'success' },
+  ]
   return (
     <ScrollArea className="h-full w-full">
       <div className="p-6 space-y-6">
+        {/* Project Header */}
         <div>
-          <h2 className="text-2xl font-bold mb-4">Project Summary</h2>
+          {projectName && (
+            <div className="mb-6 pb-4 border-b border-border">
+              <h2 className="text-2xl font-bold">{projectName}</h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                {files.length} file{files.length !== 1 ? 's' : ''} imported
+              </p>
+            </div>
+          )}
+
+          <h3 className="text-lg font-semibold mb-4">Project Summary</h3>
           <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
-            {STAT_CARDS.map((card) => (
+            {statCards.map((card) => (
               <DashboardCard key={card.label} {...card} />
             ))}
           </div>

@@ -1,29 +1,13 @@
 import { create } from 'zustand'
-
-interface ProjectFile {
-  id: string
-  name: string
-  path: string
-  type: 'bas' | 'cls' | 'frm' | 'xlsm' | 'xls' | 'xlsx' | 'txt' | 'csv'
-  content: string
-}
-
-interface ProjectModule {
-  id: string
-  name: string
-  type: 'Module' | 'Class' | 'Form'
-  procedures: string[]
-  variables: string[]
-  worksheets?: string[]
-}
+import { VBAFile, VBAModule } from '@/types/index'
 
 interface ProjectState {
   projectName: string
-  files: ProjectFile[]
-  modules: ProjectModule[]
+  files: VBAFile[]
+  modules: VBAModule[]
   setProjectName: (name: string) => void
-  addFile: (file: ProjectFile) => void
-  addModule: (module: ProjectModule) => void
+  addFile: (file: VBAFile) => void
+  addModule: (module: VBAModule) => void
   clear: () => void
 }
 
