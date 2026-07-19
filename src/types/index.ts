@@ -40,7 +40,7 @@ export interface VBAModule {
   id: string
   name: string
   type: ModuleType
-  fileId: string
+  fileId?: string
   procedures: Procedure[]
   variables: Variable[]
   constants: string[]

@@ -31,7 +31,9 @@ export function ProjectExplorer() {
               <div className="flex-1 overflow-hidden">
                 <FileTree
                   files={files}
-                  onSelectFile={setSelectedFile}
+                  onSelectFile={(file) => {
+                    setSelectedFile(file)
+                  }}
                   selectedFileId={selectedFile?.id}
                 />
               </div>
