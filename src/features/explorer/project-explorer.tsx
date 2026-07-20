@@ -1,13 +1,24 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import { PanelGroup, Panel, PanelResizeHandle } from 'react-resizable-panels'
+import { FileTreeSkeleton } from '@/components/loaders/skeleton-loader'
 import { useProjectStore } from '@/store/project-store'
 import { FileTree } from '@/features/explorer/file-tree'
 import { CodeViewer } from '@/features/explorer/code-viewer'
 
 export function ProjectExplorer() {
   const { files, activeFileId, setActiveFile } = useProjectStore()
+  const [isLoadingTree, setIsLoadingTree] = useState(false)
+
+  // Simulate file tree loading
+  React.useEffect(() => {
+    if (files.length > 0) {
+      setIsLoadingTree(true)
+      const timer = setTimeout(() => setIsLoadingTree(false), 300)
+      return () => clearTimeout(timer)
+    }
+  }, [files])
 
   // Get the selected file from the store
   const selectedFile = activeFileId ? files.find((f) => f.id === activeFileId) || null : null
@@ -30,11 +41,15 @@ export function ProjectExplorer() {
                 <h3 className="text-sm font-semibold">Files ({files.length})</h3>
               </div>
               <div className="flex-1 overflow-hidden">
-                <FileTree
-                  files={files}
-                  onSelectFile={(file) => setActiveFile(file.id)}
-                  selectedFileId={activeFileId || undefined}
-                />
+                {isLoadingTree ? (
+                  <FileTreeSkeleton />
+                ) : (
+                  <FileTree
+                    files={files}
+                    onSelectFile={(file) => setActiveFile(file.id)}
+                    selectedFileId={activeFileId || undefined}
+                  />
+                )}
               </div>
             </div>
           </Panel>

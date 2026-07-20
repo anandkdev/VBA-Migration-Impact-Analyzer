@@ -5,6 +5,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { SearchHeader } from '@/components/search/search-header'
 import { SearchToolbar } from '@/components/search/search-toolbar'
 import { SearchGroup } from '@/components/search/search-group'
+import { SearchResultSkeleton } from '@/components/loaders/skeleton-loader'
 import { useProjectStore } from '@/store/project-store'
 import { fileSearchService } from '@/features/search/file-search-service'
 import { SearchOptions, FileMatchGroup } from '@/features/search/file-search-index'
@@ -31,6 +32,7 @@ export function FileSearchView() {
   const [showOptions, setShowOptions] = useState(false)
   const [results, setResults] = useState<FileMatchGroup[]>([])
   const [isSearching, setIsSearching] = useState(false)
+  const [isInitializing, setIsInitializing] = useState(true)
 
   const [searchOptions, setSearchOptions] = useState<Partial<SearchOptions>>({
     caseSensitive: false,
@@ -41,8 +43,15 @@ export function FileSearchView() {
 
   // Initialize search index when files change
   useEffect(() => {
+    setIsInitializing(true)
     if (files.length > 0) {
-      fileSearchService.initializeIndex(files)
+      // Simulate async initialization
+      setTimeout(() => {
+        fileSearchService.initializeIndex(files)
+        setIsInitializing(false)
+      }, 100)
+    } else {
+      setIsInitializing(false)
     }
   }, [files])
 
@@ -93,6 +102,7 @@ export function FileSearchView() {
         query={query}
         onQueryChange={setQuery}
         matchCount={matchCount}
+        isLoading={isSearching || isInitializing}
         onToggleOptions={() => setShowOptions(!showOptions)}
         showOptions={showOptions}
       />
@@ -106,7 +116,7 @@ export function FileSearchView() {
       )}
 
       {/* Results */}
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 overflow-hidden relative">
         {!query.trim() ? (
           <div className="h-full flex items-center justify-center text-muted-foreground">
             <div className="text-center">
@@ -114,10 +124,10 @@ export function FileSearchView() {
               <p className="text-xs">Search across all imported files</p>
             </div>
           </div>
-        ) : isSearching ? (
-          <div className="h-full flex items-center justify-center text-muted-foreground">
-            <p className="text-sm">Searching...</p>
-          </div>
+        ) : isSearching || isInitializing ? (
+          <ScrollArea className="h-full">
+            <SearchResultSkeleton />
+          </ScrollArea>
         ) : results.length === 0 ? (
           <div className="h-full flex items-center justify-center text-muted-foreground">
             <div className="text-center">

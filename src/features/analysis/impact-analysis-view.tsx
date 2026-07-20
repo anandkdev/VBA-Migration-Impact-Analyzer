@@ -3,6 +3,7 @@
 import React, { useState, useMemo } from 'react'
 import { Zap, Search, Filter } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Spinner } from '@/components/loaders/spinner'
 import { ImpactResults } from '@/features/analysis/impact-results'
 import {
   analyzeFieldImpact,
@@ -96,8 +97,12 @@ export function ImpactAnalysisView() {
             disabled={isAnalyzing || !fieldName.trim()}
             className="gap-2"
           >
-            <Search className="w-4 h-4" />
-            Analyze
+            {isAnalyzing ? (
+              <Spinner size="sm" />
+            ) : (
+              <Search className="w-4 h-4" />
+            )}
+            {isAnalyzing ? 'Analyzing...' : 'Analyze'}
           </Button>
 
           <Button
