@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { Settings2 } from 'lucide-react'
+import { Settings2, ChevronDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { SearchInputLoader } from '@/components/loaders/search-input-loader'
 import { ExportMenu } from '@/components/search/export-menu'
@@ -15,6 +15,13 @@ interface SearchHeaderProps {
   isLoading?: boolean
   onToggleOptions?: () => void
   showOptions?: boolean
+  replaceValue?: string
+  onReplaceChange?: (value: string) => void
+  showReplace?: boolean
+  onToggleReplace?: () => void
+  onReplace?: () => void
+  onReplaceAll?: () => void
+  isReplacing?: boolean
 }
 
 /**
@@ -28,6 +35,13 @@ export function SearchHeader({
   isLoading = false,
   onToggleOptions,
   showOptions = false,
+  replaceValue = '',
+  onReplaceChange,
+  showReplace = false,
+  onToggleReplace,
+  onReplace,
+  onReplaceAll,
+  isReplacing = false,
 }: SearchHeaderProps) {
   const handleClear = () => {
     onQueryChange('')
@@ -55,6 +69,16 @@ export function SearchHeader({
         )}
 
         <Button
+          variant="ghost"
+          size="sm"
+          onClick={onToggleReplace}
+          title="Toggle replace"
+          className="text-muted-foreground hover:text-foreground"
+        >
+          <ChevronDown className={`w-4 h-4 transition-transform ${showReplace ? 'rotate-180' : ''}`} />
+        </Button>
+
+        <Button
           variant={showOptions ? 'secondary' : 'ghost'}
           size="sm"
           onClick={onToggleOptions}
@@ -63,6 +87,38 @@ export function SearchHeader({
           <Settings2 className="w-4 h-4" />
         </Button>
       </div>
+
+      {/* Replace Input */}
+      {showReplace && (
+        <div className="flex items-center gap-2">
+          <input
+            type="text"
+            value={replaceValue}
+            onChange={(e) => onReplaceChange?.(e.target.value)}
+            placeholder="Replace with..."
+            className="flex-1 px-3 py-1.5 text-sm border border-border rounded bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+            disabled={!query || isReplacing}
+          />
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={onReplace}
+            disabled={!query || matchCount === 0 || isReplacing}
+            title="Replace next match"
+          >
+            Replace
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={onReplaceAll}
+            disabled={!query || matchCount === 0 || isReplacing}
+            title="Replace all matches"
+          >
+            Replace All
+          </Button>
+        </div>
+      )}
 
       {/* Results Info */}
       {query && (

@@ -31,11 +31,15 @@ export function FileSearchView() {
 
   const [query, setQuery] = useState(activeSearchTerm || '')
   const [showOptions, setShowOptions] = useState(false)
+  const [showReplace, setShowReplace] = useState(false)
+  const [replaceValue, setReplaceValue] = useState('')
+  const [isReplacing, setIsReplacing] = useState(false)
   const [results, setResults] = useState<FileMatchGroup[]>([])
   const [isSearching, setIsSearching] = useState(false)
   const [isInitializing, setIsInitializing] = useState(true)
   const [selectedFileId, setSelectedFileId] = useState<string | null>(null)
   const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null)
+  const [lastReplacedIndex, setLastReplacedIndex] = useState(0)
 
   const [searchOptions, setSearchOptions] = useState<Partial<SearchOptions>>({
     caseSensitive: false,
@@ -104,6 +108,90 @@ export function FileSearchView() {
     setSelectedMatchId(null)
   }
 
+  // Handle replace next match
+  const handleReplace = async () => {
+    if (!query || !selectedMatchId || !selectedFileId) return
+
+    setIsReplacing(true)
+    try {
+      const fileGroup = results.find((g) => g.file.id === selectedFileId)
+      if (!fileGroup) return
+
+      const match = fileGroup.matches.find((m) => m.id === selectedMatchId)
+      if (!match) return
+
+      const result = fileSearchService.replaceMatch(
+        selectedFileId,
+        match.lineNumber,
+        match.matchStart,
+        match.matchEnd,
+        replaceValue
+      )
+
+      if (result.success) {
+        // Update file in store
+        const updatedContent = fileSearchService.getFileContent(selectedFileId)
+        if (updatedContent) {
+          // Clear and rebuild index to get updated results
+          fileSearchService.clearIndex()
+          fileSearchService.initializeIndex(
+            files.map((f) =>
+              f.id === selectedFileId
+                ? { ...f, content: updatedContent }
+                : f
+            )
+          )
+
+          // Re-search to update results
+          const newResults = await fileSearchService.searchDebounced(query, searchOptions)
+          setResults(newResults)
+
+          // Move to next match
+          const nextIndex = lastReplacedIndex + 1
+          if (nextIndex < newResults.length) {
+            setLastReplacedIndex(nextIndex)
+          }
+        }
+      }
+    } finally {
+      setIsReplacing(false)
+    }
+  }
+
+  // Handle replace all matches
+  const handleReplaceAll = async () => {
+    if (!query) return
+
+    setIsReplacing(true)
+    try {
+      const replacementResult = fileSearchService.replaceAllMatches(
+        results,
+        replaceValue
+      )
+
+      if (replacementResult.success) {
+        // Get updated content for all affected files
+        const updatedFiles = files.map((file) => {
+          const updatedContent = fileSearchService.getFileContent(file.id)
+          return updatedContent ? { ...file, content: updatedContent } : file
+        })
+
+        // Clear and rebuild index
+        fileSearchService.clearIndex()
+        fileSearchService.initializeIndex(updatedFiles)
+
+        // Re-search to get updated results
+        const newResults = await fileSearchService.searchDebounced(query, searchOptions)
+        setResults(newResults)
+
+        // Show success message
+        console.log(`Replaced ${replacementResult.totalReplaced} matches`)
+      }
+    } finally {
+      setIsReplacing(false)
+    }
+  }
+
   // Get selected file group for preview
   const selectedFileGroup = useMemo(() => {
     if (!selectedFileId) return null
@@ -121,6 +209,13 @@ export function FileSearchView() {
         isLoading={isSearching || isInitializing}
         onToggleOptions={() => setShowOptions(!showOptions)}
         showOptions={showOptions}
+        replaceValue={replaceValue}
+        onReplaceChange={setReplaceValue}
+        showReplace={showReplace}
+        onToggleReplace={() => setShowReplace(!showReplace)}
+        onReplace={handleReplace}
+        onReplaceAll={handleReplaceAll}
+        isReplacing={isReplacing}
       />
 
       {/* Options */}

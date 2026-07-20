@@ -6,6 +6,7 @@ export interface SearchMatch {
   lineContent: string
   matchStart: number
   matchEnd: number
+  matchContent: string
 }
 
 export interface FileMatchGroup {
@@ -181,6 +182,7 @@ export class FileSearchIndex {
         lineContent: originalLine,
         matchStart: index,
         matchEnd: index + searchQuery.length,
+        matchContent: originalLine.substring(index, index + searchQuery.length),
       })
 
       startIndex = index + 1
@@ -214,6 +216,7 @@ export class FileSearchIndex {
         lineContent: line,
         matchStart: match.index,
         matchEnd: match.index + match[0].length,
+        matchContent: line.substring(match.index, match.index + match[0].length),
       })
     }
 
@@ -245,6 +248,7 @@ export class FileSearchIndex {
           lineContent: line,
           matchStart: match.index,
           matchEnd: match.index + match[0].length,
+          matchContent: match[0],
         })
       }
     } catch (error) {

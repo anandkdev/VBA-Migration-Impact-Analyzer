@@ -139,6 +139,130 @@ export class FileSearchService {
   }
 
   /**
+   * Replace a single match in a file
+   */
+  public replaceMatch(
+    fileId: string,
+    lineNumber: number,
+    matchStart: number,
+    matchEnd: number,
+    replacement: string
+  ): { success: boolean; newContent?: string; error?: string } {
+    try {
+      const indexed = this.index.getIndexedFile(fileId)
+      if (!indexed) {
+        return { success: false, error: 'File not found' }
+      }
+
+      const lineIndex = lineNumber - 1
+      if (lineIndex < 0 || lineIndex >= indexed.lines.length) {
+        return { success: false, error: 'Line not found' }
+      }
+
+      const line = indexed.lines[lineIndex]
+      const newLine =
+        line.originalContent.slice(0, matchStart) +
+        replacement +
+        line.originalContent.slice(matchEnd)
+
+      indexed.lines[lineIndex].originalContent = newLine
+      return { success: true, newContent: newLine }
+    } catch (error) {
+      return {
+        success: false,
+        error: `Failed to replace: ${(error as Error).message}`,
+      }
+    }
+  }
+
+  /**
+   * Replace all matches in a file
+   */
+  public replaceAllInFile(
+    fileId: string,
+    searchTerm: string,
+    replacement: string,
+    options?: Partial<SearchOptions>
+  ): { success: boolean; replacedCount?: number; error?: string } {
+    try {
+      const indexed = this.index.getIndexedFile(fileId)
+      if (!indexed) {
+        return { success: false, error: 'File not found' }
+      }
+
+      let replacedCount = 0
+      const caseSensitive = options?.caseSensitive ?? false
+      const searchRegex = options?.matchRegex
+        ? new RegExp(searchTerm, caseSensitive ? 'g' : 'gi')
+        : null
+
+      indexed.lines.forEach((line) => {
+        const originalLength = line.originalContent.length
+        if (searchRegex) {
+          line.originalContent = line.originalContent.replace(
+            searchRegex,
+            replacement
+          )
+        } else {
+          const regex = new RegExp(
+            searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
+            caseSensitive ? 'g' : 'gi'
+          )
+          line.originalContent = line.originalContent.replace(regex, replacement)
+        }
+        if (line.originalContent.length !== originalLength) {
+          replacedCount++
+        }
+      })
+
+      return { success: true, replacedCount }
+    } catch (error) {
+      return {
+        success: false,
+        error: `Failed to replace all: ${(error as Error).message}`,
+      }
+    }
+  }
+
+  /**
+   * Replace all matches across all files
+   */
+  public replaceAllMatches(
+    results: FileMatchGroup[],
+    replacement: string
+  ): { success: boolean; totalReplaced?: number; error?: string } {
+    try {
+      let totalReplaced = 0
+
+      results.forEach((group) => {
+        const searchTerm = group.matches[0]?.matchContent || ''
+        if (!searchTerm) return
+
+        const result = this.replaceAllInFile(group.file.id, searchTerm, replacement)
+        if (result.success && result.replacedCount) {
+          totalReplaced += result.replacedCount
+        }
+      })
+
+      return { success: true, totalReplaced }
+    } catch (error) {
+      return {
+        success: false,
+        error: `Failed to replace all matches: ${(error as Error).message}`,
+      }
+    }
+  }
+
+  /**
+   * Get the current file content (after any replacements)
+   */
+  public getFileContent(fileId: string): string | null {
+    const indexed = this.index.getIndexedFile(fileId)
+    if (!indexed) return null
+    return indexed.lines.map((line) => line.originalContent).join('\n')
+  }
+
+  /**
    * Get index statistics
    */
   public getStats() {
