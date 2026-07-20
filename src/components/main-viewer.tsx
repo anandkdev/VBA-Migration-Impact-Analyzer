@@ -9,6 +9,7 @@ import { ImpactAnalysis } from '@/features/analysis/impact-analysis'
 import { DependencyGraph } from '@/features/graph/dependency-graph'
 import { ReportsView } from '@/features/reports/reports-view'
 import { SettingsView } from '@/features/settings/settings-view'
+import { HelpView } from '@/features/help/help-view'
 import { EmptyState } from '@/components/empty-state'
 
 export const ViewerContext = createContext<{
@@ -42,6 +43,8 @@ export function MainViewer({ activeSection }: MainViewerProps) {
         return <ReportsView />
       case 'settings':
         return <SettingsView />
+      case 'help':
+        return <HelpView />
       default:
         return <EmptyState />
     }

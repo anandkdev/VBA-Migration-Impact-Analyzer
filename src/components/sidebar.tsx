@@ -9,6 +9,7 @@ import {
   GitGraph,
   FileText,
   Settings,
+  HelpCircle,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -28,6 +29,7 @@ const NAV_ITEMS = [
   { id: 'graph', label: 'Dependency Graph', icon: GitGraph },
   { id: 'reports', label: 'Reports', icon: FileText },
   { id: 'settings', label: 'Settings', icon: Settings },
+  { id: 'help', label: 'Help', icon: HelpCircle },
 ]
 
 export function Sidebar({ activeSection, onSectionChange }: SidebarProps) {
