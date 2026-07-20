@@ -5,7 +5,6 @@ import { Dashboard } from '@/features/dashboard/dashboard'
 import { ProjectExplorer } from '@/features/explorer/project-explorer'
 import { SearchView } from '@/features/search/search-view'
 import { ImpactAnalysis } from '@/features/analysis/impact-analysis'
-import { DependencyGraph } from '@/features/graph/dependency-graph'
 import { ReportsView } from '@/features/reports/reports-view'
 import { SettingsView } from '@/features/settings/settings-view'
 import { HelpView } from '@/features/help/help-view'
@@ -37,8 +36,6 @@ export function MainViewer({ activeSection }: MainViewerProps) {
         return <SearchView />
       case 'analysis':
         return <ImpactAnalysis />
-      case 'graph':
-        return <DependencyGraph />
       case 'reports':
         return <ReportsView />
       case 'settings':

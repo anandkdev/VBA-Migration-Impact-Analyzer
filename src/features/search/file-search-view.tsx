@@ -7,6 +7,7 @@ import { SearchHeader } from '@/components/search/search-header'
 import { SearchToolbar } from '@/components/search/search-toolbar'
 import { SearchGroup } from '@/components/search/search-group'
 import { SearchPreview } from '@/components/search/search-preview'
+import { FileDependencyPanel } from '@/components/search/file-dependency-panel'
 import { SearchResultSkeleton } from '@/components/loaders/skeleton-loader'
 import { useProjectStore } from '@/store/project-store'
 import { fileSearchService } from '@/features/search/file-search-service'
@@ -40,6 +41,8 @@ export function FileSearchView() {
   const [selectedFileId, setSelectedFileId] = useState<string | null>(null)
   const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null)
   const [lastReplacedIndex, setLastReplacedIndex] = useState(0)
+  const [showDependencyPanel, setShowDependencyPanel] = useState(false)
+  const [dependencyFileName, setDependencyFileName] = useState<string | null>(null)
 
   const [searchOptions, setSearchOptions] = useState<Partial<SearchOptions>>({
     caseSensitive: false,
@@ -106,6 +109,18 @@ export function FileSearchView() {
   const handleClosePreview = () => {
     setSelectedFileId(null)
     setSelectedMatchId(null)
+  }
+
+  // Handle showing dependency panel
+  const handleShowDependencies = (fileName: string) => {
+    setDependencyFileName(fileName)
+    setShowDependencyPanel(true)
+  }
+
+  // Handle close dependency panel
+  const handleCloseDependencyPanel = () => {
+    setShowDependencyPanel(false)
+    setDependencyFileName(null)
   }
 
   // Handle replace next match
@@ -246,10 +261,10 @@ export function FileSearchView() {
               <p className="text-xs">Try a different search term</p>
             </div>
           </div>
-        ) : selectedFileId ? (
+        ) : selectedFileId || showDependencyPanel ? (
           <PanelGroup direction="horizontal">
             {/* Results Panel */}
-            <Panel defaultSize={50} minSize={30}>
+            <Panel defaultSize={40} minSize={30}>
               <ScrollArea className="h-full">
                 <div>
                   {results.map((group) => (
@@ -258,6 +273,7 @@ export function FileSearchView() {
                       group={group}
                       selectedMatchId={selectedMatchId}
                       onSelectMatch={handleSelectMatch}
+                      onShowDependencies={handleShowDependencies}
                     />
                   ))}
                 </div>
@@ -266,16 +282,25 @@ export function FileSearchView() {
 
             <PanelResizeHandle className="w-1 bg-border hover:bg-primary/50 transition-colors" />
 
-            {/* Preview Panel */}
-            <Panel defaultSize={50} minSize={30}>
-              <SearchPreview
-                fileGroup={selectedFileGroup}
-                currentMatchId={selectedMatchId}
-                query={query}
-                onMatchSelect={handleSelectMatch}
-                onClose={handleClosePreview}
-              />
-            </Panel>
+            {/* Preview or Dependency Panel */}
+            {showDependencyPanel ? (
+              <Panel defaultSize={60} minSize={30}>
+                <FileDependencyPanel
+                  fileName={dependencyFileName}
+                  onClose={handleCloseDependencyPanel}
+                />
+              </Panel>
+            ) : (
+              <Panel defaultSize={60} minSize={30}>
+                <SearchPreview
+                  fileGroup={selectedFileGroup}
+                  currentMatchId={selectedMatchId}
+                  query={query}
+                  onMatchSelect={handleSelectMatch}
+                  onClose={handleClosePreview}
+                />
+              </Panel>
+            )}
           </PanelGroup>
         ) : (
           <ScrollArea className="h-full">
@@ -286,6 +311,7 @@ export function FileSearchView() {
                   group={group}
                   selectedMatchId={activeSearchResultId}
                   onSelectMatch={handleSelectMatch}
+                  onShowDependencies={handleShowDependencies}
                 />
               ))}
             </div>
