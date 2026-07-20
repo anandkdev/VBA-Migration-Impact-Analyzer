@@ -6,6 +6,8 @@ export type ExportFormat = 'csv' | 'xlsx' | 'json' | 'txt'
 interface ExportRow {
   'Search Query': string
   File: string
+  'Source File'?: string
+  'Sheet Name'?: string
   'File Match Count': number
   'Line Number': number
   'Line Content': string
@@ -79,23 +81,32 @@ export class SearchExportService {
       timestamp: new Date().toISOString(),
       totalFiles: results.length,
       totalMatches: results.reduce((sum, r) => sum + r.matches.length, 0),
-      results: results.map((group) => ({
-        file: {
+      results: results.map((group) => {
+        const fileObj: any = {
           id: group.file.id,
           name: group.file.name,
           path: group.file.path,
           type: group.file.type,
-        },
-        matchCount: group.matches.length,
-        matches: group.matches.map((match) => ({
-          id: match.id,
-          lineNumber: match.lineNumber,
-          lineContent: match.lineContent,
-          matchStart: match.matchStart,
-          matchEnd: match.matchEnd,
-          matchedText: match.lineContent.substring(match.matchStart, match.matchEnd),
-        })),
-      })),
+        }
+        if (group.file.sourceFile) {
+          fileObj.sourceFile = group.file.sourceFile
+        }
+        if (group.file.sourceSheet) {
+          fileObj.sourceSheet = group.file.sourceSheet
+        }
+        return {
+          file: fileObj,
+          matchCount: group.matches.length,
+          matches: group.matches.map((match) => ({
+            id: match.id,
+            lineNumber: match.lineNumber,
+            lineContent: match.lineContent,
+            matchStart: match.matchStart,
+            matchEnd: match.matchEnd,
+            matchedText: match.lineContent.substring(match.matchStart, match.matchEnd),
+          })),
+        }
+      }),
     }
 
     const json = JSON.stringify(data, null, 2)
@@ -122,6 +133,12 @@ export class SearchExportService {
 
     results.forEach((group) => {
       lines.push(`File: ${group.file.path}`)
+      if (group.file.sourceFile) {
+        lines.push(`Source File: ${group.file.sourceFile}`)
+      }
+      if (group.file.sourceSheet) {
+        lines.push(`Sheet Name: ${group.file.sourceSheet}`)
+      }
       lines.push(`File Match Count: ${group.matches.length}`)
       lines.push('-'.repeat(80))
 
@@ -146,14 +163,24 @@ export class SearchExportService {
 
     results.forEach((group) => {
       group.matches.forEach((match) => {
-        rows.push({
+        const row: ExportRow = {
           'Search Query': query || '',
           File: group.file.path,
           'File Match Count': group.matches.length,
           'Line Number': match.lineNumber,
           'Line Content': match.lineContent,
           'Match Position': `${match.matchStart}-${match.matchEnd}`,
-        })
+        }
+
+        // Add source file and sheet info if available
+        if (group.file.sourceFile) {
+          row['Source File'] = group.file.sourceFile
+        }
+        if (group.file.sourceSheet) {
+          row['Sheet Name'] = group.file.sourceSheet
+        }
+
+        rows.push(row)
       })
     })
 
@@ -171,7 +198,7 @@ export class SearchExportService {
 
     results.forEach((group) => {
       group.matches.forEach((match) => {
-        rows.push({
+        const row: ExcelExportRow = {
           'Search Query': query,
           File: group.file.path,
           'File Match Count': group.matches.length,
@@ -179,7 +206,17 @@ export class SearchExportService {
           'Line Content': match.lineContent,
           'Match Position': `${match.matchStart}-${match.matchEnd}`,
           'Matched Text': match.lineContent.substring(match.matchStart, match.matchEnd),
-        })
+        }
+
+        // Add source file and sheet info if available
+        if (group.file.sourceFile) {
+          row['Source File'] = group.file.sourceFile
+        }
+        if (group.file.sourceSheet) {
+          row['Sheet Name'] = group.file.sourceSheet
+        }
+
+        rows.push(row)
       })
     })
 

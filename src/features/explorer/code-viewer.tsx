@@ -156,7 +156,7 @@ export function CodeViewer({ file }: CodeViewerProps) {
                 <div className="mr-4 text-muted-foreground select-none sticky left-0 w-12 text-right pr-2">
                   {index + 1}
                 </div>
-                <code className="flex-1 break-words whitespace-pre-wrap">
+                <code className="flex-1 whitespace-pre">
                   {line}
                 </code>
               </div>
@@ -205,7 +205,7 @@ function CodeContent({ file, lines, selectedProcedure }: CodeContentProps) {
                   <span className="mr-4 text-muted-foreground select-none inline-block w-12 text-right pr-2">
                     {lineNum}
                   </span>
-                  <code className="break-words whitespace-pre-wrap">
+                  <code className="whitespace-pre">
                     {line}
                   </code>
                 </div>

@@ -1,5 +1,6 @@
 import { VBAFile, VBAFileType } from '@/types/index'
 import { useProjectStore } from '@/store/project-store'
+import * as XLSX from 'xlsx'
 
 const SUPPORTED_EXTENSIONS = new Set([
   '.bas',
@@ -12,6 +13,8 @@ const SUPPORTED_EXTENSIONS = new Set([
   '.csv',
 ])
 
+const EXCEL_EXTENSIONS = new Set(['.xlsm', '.xls', '.xlsx'])
+
 function getFileType(filename: string): VBAFileType | null {
   const ext = filename.toLowerCase().slice(filename.lastIndexOf('.'))
   if (SUPPORTED_EXTENSIONS.has(ext)) {
@@ -22,8 +25,48 @@ function getFileType(filename: string): VBAFileType | null {
 
 async function readFileContent(fileHandle: any): Promise<string> {
   const file = await fileHandle.getFile()
+  const ext = fileHandle.name.toLowerCase().slice(fileHandle.name.lastIndexOf('.'))
+
+  // Handle Excel files specially - extract sheet content
+  if (EXCEL_EXTENSIONS.has(ext)) {
+    return await readExcelContent(file)
+  }
+
+  // Handle text files
   const text = await file.text()
   return text
+}
+
+/**
+ * Extract readable content from Excel files
+ * Includes sheet names and cell content
+ */
+async function readExcelContent(file: File): Promise<string> {
+  try {
+    const arrayBuffer = await file.arrayBuffer()
+    const workbook = XLSX.read(arrayBuffer, { type: 'array' })
+
+    const content: string[] = []
+    content.push(`File: ${file.name}`)
+    content.push(`Sheets: ${workbook.SheetNames.join(', ')}`)
+    content.push('='.repeat(80))
+    content.push('')
+
+    // Extract content from all sheets
+    workbook.SheetNames.forEach((sheetName) => {
+      const worksheet = workbook.Sheets[sheetName]
+      const csvContent = XLSX.utils.sheet_to_csv(worksheet)
+      content.push(`Sheet: ${sheetName}`)
+      content.push('-'.repeat(80))
+      content.push(csvContent)
+      content.push('')
+    })
+
+    return content.join('\n')
+  } catch (error) {
+    console.warn('Failed to parse Excel file as XLSX, treating as binary:', error)
+    return `[Binary Excel File: ${file.name}]\n[Note: This file contains binary data that cannot be fully displayed as text]\n[File size: ${(file.size / 1024).toFixed(2)} KB]`
+  }
 }
 
 async function walkDirectory(
@@ -40,17 +83,24 @@ async function walkDirectory(
         const fileType = getFileType(entry.name)
         if (fileType) {
           try {
-            const content = await readFileContent(entry)
-            const vbaFile: VBAFile = {
-              id: `file_${Math.random().toString(36).substr(2, 9)}`,
-              name: entry.name,
-              path: entryPath,
-              type: fileType,
-              content,
-              createdAt: new Date(),
-              modifiedAt: new Date(),
+            // Handle Excel files specially - extract sheets as separate files
+            if (EXCEL_EXTENSIONS.has(`.${fileType}`)) {
+              const excelSheets = await readExcelSheets(entry, entryPath)
+              files.push(...excelSheets)
+            } else {
+              // Handle regular text files
+              const content = await readFileContent(entry)
+              const vbaFile: VBAFile = {
+                id: `file_${Math.random().toString(36).substr(2, 9)}`,
+                name: entry.name,
+                path: entryPath,
+                type: fileType,
+                content,
+                createdAt: new Date(),
+                modifiedAt: new Date(),
+              }
+              files.push(vbaFile)
             }
-            files.push(vbaFile)
           } catch (error) {
             console.warn(`Failed to read file ${entryPath}:`, error)
           }
@@ -68,6 +118,43 @@ async function walkDirectory(
   }
 
   return files
+}
+
+/**
+ * Extract each sheet from an Excel file as a separate file
+ */
+async function readExcelSheets(fileHandle: any, filePath: string): Promise<VBAFile[]> {
+  const sheets: VBAFile[] = []
+  try {
+    const file = await fileHandle.getFile()
+    const arrayBuffer = await file.arrayBuffer()
+    const workbook = XLSX.read(arrayBuffer, { type: 'array' })
+    const fileType = getFileType(fileHandle.name) || 'xlsx'
+
+    // Create a separate file for each sheet
+    workbook.SheetNames.forEach((sheetName) => {
+      const worksheet = workbook.Sheets[sheetName]
+      const csvContent = XLSX.utils.sheet_to_csv(worksheet)
+
+      const vbaFile: VBAFile = {
+        id: `file_${Math.random().toString(36).substr(2, 9)}`,
+        name: `${sheetName}`,
+        path: `${filePath} > ${sheetName}`,
+        type: fileType as VBAFileType,
+        content: csvContent,
+        createdAt: new Date(),
+        modifiedAt: new Date(),
+        sourceFile: fileHandle.name, // Track original Excel file
+        sourceSheet: sheetName, // Track which sheet this is from
+      }
+      sheets.push(vbaFile)
+    })
+
+    return sheets
+  } catch (error) {
+    console.error(`Failed to read Excel sheets from ${filePath}:`, error)
+    return []
+  }
 }
 
 export async function importProjectFromFolder(dirHandle: any): Promise<{
@@ -141,17 +228,24 @@ export async function importFilesFromSelection(fileHandles: any[]): Promise<{
 
       if (fileType) {
         try {
-          const content = await readFileContent(fileHandle)
-          const vbaFile: VBAFile = {
-            id: `file_${Math.random().toString(36).substr(2, 9)}`,
-            name: fileHandle.name,
-            path: fileHandle.name,
-            type: fileType,
-            content,
-            createdAt: new Date(),
-            modifiedAt: new Date(),
+          // Handle Excel files specially - extract sheets as separate files
+          if (EXCEL_EXTENSIONS.has(`.${fileType}`)) {
+            const excelSheets = await readExcelSheets(fileHandle, fileHandle.name)
+            files.push(...excelSheets)
+          } else {
+            // Handle regular text files
+            const content = await readFileContent(fileHandle)
+            const vbaFile: VBAFile = {
+              id: `file_${Math.random().toString(36).substr(2, 9)}`,
+              name: fileHandle.name,
+              path: fileHandle.name,
+              type: fileType,
+              content,
+              createdAt: new Date(),
+              modifiedAt: new Date(),
+            }
+            files.push(vbaFile)
           }
-          files.push(vbaFile)
         } catch (error) {
           console.warn(`Failed to read file ${fileHandle.name}:`, error)
           skipped++

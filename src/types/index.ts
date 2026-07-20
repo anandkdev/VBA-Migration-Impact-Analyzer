@@ -12,6 +12,8 @@ export interface VBAFile {
   content: string
   createdAt: Date
   modifiedAt: Date
+  sourceFile?: string
+  sourceSheet?: string
 }
 
 export interface Variable {

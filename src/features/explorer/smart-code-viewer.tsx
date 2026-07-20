@@ -49,7 +49,7 @@ export function SmartCodeViewer({
                 <span className="mr-4 text-muted-foreground select-none inline-block w-12 text-right pr-2">
                   {lineNum}
                 </span>
-                <code className="flex-1 break-words whitespace-pre-wrap">
+                <code className="flex-1 whitespace-pre">
                   {line}
                 </code>
               </div>
