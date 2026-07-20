@@ -1,61 +1,61 @@
-'use client'
+"use client";
 
-import React, { useState } from 'react'
-import { ChevronRight, ChevronDown, FileCode2, Folder } from 'lucide-react'
-import { VBAFile } from '@/types/index'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { cn } from '@/lib/utils'
+import React, { useState } from "react";
+import { ChevronRight, ChevronDown, FileCode2, Folder } from "lucide-react";
+import { VBAFile } from "@/types/index";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
 
 interface FileTreeNode {
-  type: 'folder' | 'file'
-  name: string
-  path: string
-  children?: FileTreeNode[]
-  file?: VBAFile
+  type: "folder" | "file";
+  name: string;
+  path: string;
+  children?: FileTreeNode[];
+  file?: VBAFile;
 }
 
 interface FileTreeProps {
-  files: VBAFile[]
-  onSelectFile: (file: VBAFile) => void
-  selectedFileId?: string
+  files: VBAFile[];
+  onSelectFile: (file: VBAFile) => void;
+  selectedFileId?: string;
 }
 
 function buildFileTree(files: VBAFile[]): FileTreeNode[] {
-  const root: Record<string, FileTreeNode> = {}
+  const root: Record<string, FileTreeNode> = {};
 
   files.forEach((file) => {
-    const parts = file.path.split('/')
-    let current = root
+    const parts = file.path.split("/");
+    let current = root;
 
     parts.forEach((part, index) => {
-      const isFile = index === parts.length - 1
-      const key = part
+      const isFile = index === parts.length - 1;
+      const key = part;
 
       if (!current[key]) {
         current[key] = {
-          type: isFile ? 'file' : 'folder',
+          type: isFile ? "file" : "folder",
           name: part,
-          path: parts.slice(0, index + 1).join('/'),
+          path: parts.slice(0, index + 1).join("/"),
           ...(isFile && { file }),
-        }
+        };
       }
 
       if (!isFile) {
         if (!current[key].children) {
-          current[key].children = []
+          current[key].children = [];
         }
         current = current[key].children.reduce(
           (acc, child) => ({ ...acc, [child.name]: child }),
-          {}
-        )
+          {},
+        );
       }
-    })
-  })
+    });
+  });
 
   return Object.values(root).sort((a, b) => {
-    if (a.type !== b.type) return a.type === 'folder' ? -1 : 1
-    return a.name.localeCompare(b.name)
-  })
+    if (a.type !== b.type) return a.type === "folder" ? -1 : 1;
+    return a.name.localeCompare(b.name);
+  });
 }
 
 function FileTreeItem({
@@ -64,29 +64,29 @@ function FileTreeItem({
   onSelectFile,
   selectedFileId,
 }: {
-  node: FileTreeNode
-  level?: number
-  onSelectFile: (file: VBAFile) => void
-  selectedFileId?: string
+  node: FileTreeNode;
+  level?: number;
+  onSelectFile: (file: VBAFile) => void;
+  selectedFileId?: string;
 }) {
-  const [isExpanded, setIsExpanded] = useState(level < 2)
-  const isFile = node.type === 'file'
+  const [isExpanded, setIsExpanded] = useState(level < 2);
+  const isFile = node.type === "file";
 
   return (
     <div>
       <div
         className={cn(
-          'flex items-center gap-1 px-2 py-1.5 text-sm hover:bg-accent rounded cursor-pointer group',
+          "flex items-center gap-1 px-2 py-1.5 text-sm hover:bg-accent/20 rounded cursor-pointer group",
           isFile &&
             node.file?.id === selectedFileId &&
-            'bg-accent text-accent-foreground'
+            "bg-accent text-accent-foreground",
         )}
         style={{ paddingLeft: `${level * 16 + 8}px` }}
         onClick={() => {
           if (isFile && node.file) {
-            onSelectFile(node.file)
+            onSelectFile(node.file);
           } else {
-            setIsExpanded(!isExpanded)
+            setIsExpanded(!isExpanded);
           }
         }}
       >
@@ -124,7 +124,7 @@ function FileTreeItem({
         </div>
       )}
     </div>
-  )
+  );
 }
 
 export function FileTree({
@@ -137,12 +137,14 @@ export function FileTree({
       <div className="flex flex-col items-center justify-center h-full gap-3 text-muted-foreground">
         <Folder className="w-8 h-8 opacity-50" />
         <p className="text-sm">No files imported yet</p>
-        <p className="text-xs">Use the "Import Project" button to get started</p>
+        <p className="text-xs">
+          Use the "Import Project" button to get started
+        </p>
       </div>
-    )
+    );
   }
 
-  const tree = buildFileTree(files)
+  const tree = buildFileTree(files);
 
   return (
     <ScrollArea className="h-full w-full">
@@ -157,5 +159,5 @@ export function FileTree({
         ))}
       </div>
     </ScrollArea>
-  )
+  );
 }

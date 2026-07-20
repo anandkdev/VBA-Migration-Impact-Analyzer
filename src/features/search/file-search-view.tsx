@@ -1,10 +1,12 @@
 'use client'
 
 import React, { useState, useEffect, useMemo } from 'react'
+import { PanelGroup, Panel, PanelResizeHandle } from 'react-resizable-panels'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { SearchHeader } from '@/components/search/search-header'
 import { SearchToolbar } from '@/components/search/search-toolbar'
 import { SearchGroup } from '@/components/search/search-group'
+import { SearchPreview } from '@/components/search/search-preview'
 import { SearchResultSkeleton } from '@/components/loaders/skeleton-loader'
 import { useProjectStore } from '@/store/project-store'
 import { fileSearchService } from '@/features/search/file-search-service'
@@ -25,7 +27,6 @@ export function FileSearchView() {
     activeSearchResultId,
     setActiveSearch,
     setActiveFile,
-    setActiveSection,
   } = useProjectStore()
 
   const [query, setQuery] = useState(activeSearchTerm || '')
@@ -33,6 +34,8 @@ export function FileSearchView() {
   const [results, setResults] = useState<FileMatchGroup[]>([])
   const [isSearching, setIsSearching] = useState(false)
   const [isInitializing, setIsInitializing] = useState(true)
+  const [selectedFileId, setSelectedFileId] = useState<string | null>(null)
+  const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null)
 
   const [searchOptions, setSearchOptions] = useState<Partial<SearchOptions>>({
     caseSensitive: false,
@@ -60,11 +63,12 @@ export function FileSearchView() {
     const performSearch = async () => {
       if (!query.trim()) {
         setResults([])
+        setIsSearching(false)
         return
       }
 
       setIsSearching(true)
-      const searchResults = fileSearchService.search(query, searchOptions)
+      const searchResults = await fileSearchService.searchDebounced(query, searchOptions)
       setResults(searchResults)
       setIsSearching(false)
     }
@@ -83,17 +87,28 @@ export function FileSearchView() {
     [results]
   )
 
-  // Handle match selection
+  // Handle match selection - show preview instead of navigating
   const handleSelectMatch = (
     matchId: string,
     fileId: string,
     lineNumber: number
   ) => {
-    // Update global store
-    setActiveSearch(query, matchId)
+    setSelectedFileId(fileId)
+    setSelectedMatchId(matchId)
     setActiveFile(fileId, lineNumber)
-    setActiveSection('explorer')
   }
+
+  // Handle close preview
+  const handleClosePreview = () => {
+    setSelectedFileId(null)
+    setSelectedMatchId(null)
+  }
+
+  // Get selected file group for preview
+  const selectedFileGroup = useMemo(() => {
+    if (!selectedFileId) return null
+    return results.find((group) => group.file.id === selectedFileId) || null
+  }, [results, selectedFileId])
 
   return (
     <div className="h-full flex flex-col bg-background">
@@ -102,6 +117,7 @@ export function FileSearchView() {
         query={query}
         onQueryChange={setQuery}
         matchCount={matchCount}
+        results={results}
         isLoading={isSearching || isInitializing}
         onToggleOptions={() => setShowOptions(!showOptions)}
         showOptions={showOptions}
@@ -115,8 +131,8 @@ export function FileSearchView() {
         />
       )}
 
-      {/* Results */}
-      <div className="flex-1 overflow-hidden relative">
+      {/* Results with Preview */}
+      <div className="flex-1 overflow-hidden">
         {!query.trim() ? (
           <div className="h-full flex items-center justify-center text-muted-foreground">
             <div className="text-center">
@@ -135,6 +151,37 @@ export function FileSearchView() {
               <p className="text-xs">Try a different search term</p>
             </div>
           </div>
+        ) : selectedFileId ? (
+          <PanelGroup direction="horizontal">
+            {/* Results Panel */}
+            <Panel defaultSize={50} minSize={30}>
+              <ScrollArea className="h-full">
+                <div>
+                  {results.map((group) => (
+                    <SearchGroup
+                      key={group.file.id}
+                      group={group}
+                      selectedMatchId={selectedMatchId}
+                      onSelectMatch={handleSelectMatch}
+                    />
+                  ))}
+                </div>
+              </ScrollArea>
+            </Panel>
+
+            <PanelResizeHandle className="w-1 bg-border hover:bg-primary/50 transition-colors" />
+
+            {/* Preview Panel */}
+            <Panel defaultSize={50} minSize={30}>
+              <SearchPreview
+                fileGroup={selectedFileGroup}
+                currentMatchId={selectedMatchId}
+                query={query}
+                onMatchSelect={handleSelectMatch}
+                onClose={handleClosePreview}
+              />
+            </Panel>
+          </PanelGroup>
         ) : (
           <ScrollArea className="h-full">
             <div>

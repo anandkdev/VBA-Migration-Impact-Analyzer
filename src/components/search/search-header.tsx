@@ -4,11 +4,14 @@ import React from 'react'
 import { Settings2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { SearchInputLoader } from '@/components/loaders/search-input-loader'
+import { ExportMenu } from '@/components/search/export-menu'
+import { FileMatchGroup } from '@/features/search/file-search-index'
 
 interface SearchHeaderProps {
   query: string
   onQueryChange: (query: string) => void
   matchCount: number
+  results?: FileMatchGroup[]
   isLoading?: boolean
   onToggleOptions?: () => void
   showOptions?: boolean
@@ -21,6 +24,7 @@ export function SearchHeader({
   query,
   onQueryChange,
   matchCount,
+  results = [],
   isLoading = false,
   onToggleOptions,
   showOptions = false,
@@ -41,6 +45,14 @@ export function SearchHeader({
           placeholder="Search files and code..."
           autoFocus
         />
+
+        {query && results.length > 0 && (
+          <ExportMenu
+            results={results}
+            query={query}
+            disabled={isLoading}
+          />
+        )}
 
         <Button
           variant={showOptions ? 'secondary' : 'ghost'}

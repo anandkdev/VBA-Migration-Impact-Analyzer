@@ -1,35 +1,57 @@
-'use client'
+"use client";
 
-import React, { useMemo, useState } from 'react'
-import { PanelGroup, Panel, PanelResizeHandle } from 'react-resizable-panels'
-import { VBAFile, Procedure } from '@/types/index'
-import { getFileTypeIcon, getFileTypeDisplayName } from '@/features/import/import-service'
-import { parseVBACode } from '@/features/parser/vba-parser'
-import { ProcedureOutline } from '@/features/parser/procedure-outline'
-import { ScrollArea } from '@/components/ui/scroll-area'
+import React, { useMemo, useState } from "react";
+import { PanelGroup, Panel, PanelResizeHandle } from "react-resizable-panels";
+import { VBAFile, Procedure } from "@/types/index";
+import {
+  getFileTypeIcon,
+  getFileTypeDisplayName,
+} from "@/features/import/import-service";
+import { parseVBACode } from "@/features/parser/vba-parser";
+import { ProcedureOutline } from "@/features/parser/procedure-outline";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Loader } from "@/components/ui/loader";
 
 interface CodeViewerProps {
-  file: VBAFile | null
+  file: VBAFile | null;
 }
 
 export function CodeViewer({ file }: CodeViewerProps) {
-  const [selectedProcedure, setSelectedProcedure] = useState<Procedure | null>(null)
+  const [selectedProcedure, setSelectedProcedure] = useState<Procedure | null>(
+    null,
+  );
+  const [isLoading, setIsLoading] = useState(false);
+  const [parsedData, setParsedData] = useState<{
+    lines: string[];
+    parsedModule: any;
+  }>({ lines: [], parsedModule: null });
 
-  const { lines, parsedModule } = useMemo(() => {
+  React.useEffect(() => {
     if (!file) {
-      return { lines: [], parsedModule: null }
+      setParsedData({ lines: [], parsedModule: null });
+      return;
     }
 
-    const fileLines = file.content.split('\n')
+    setIsLoading(true);
 
-    // Only parse VBA files
-    if (['bas', 'cls', 'frm'].includes(file.type)) {
-      const module = parseVBACode(file.content, file.id)
-      return { lines: fileLines, parsedModule: module }
-    }
+    // Small delay to allow the beautiful loader to render smoothly
+    const timer = setTimeout(() => {
+      const fileLines = file.content.split("\n");
+      let module = null;
 
-    return { lines: fileLines, parsedModule: null }
-  }, [file])
+      // Only parse VBA files
+      if (["bas", "cls", "frm"].includes(file.type)) {
+        module = parseVBACode(file.content, file.id);
+      }
+
+      setParsedData({ lines: fileLines, parsedModule: module });
+      setIsLoading(false);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [file?.id, file?.content, file?.type]);
+
+  const { lines, parsedModule } = parsedData;
 
   if (!file) {
     return (
@@ -39,7 +61,11 @@ export function CodeViewer({ file }: CodeViewerProps) {
           <p className="text-xs">Click on a file in the explorer</p>
         </div>
       </div>
-    )
+    );
+  }
+
+  if (isLoading) {
+    return <Loader text={`Loading ${file.name}...`} />;
   }
 
   // Show procedure outline for VBA files
@@ -66,7 +92,12 @@ export function CodeViewer({ file }: CodeViewerProps) {
         <div className="flex-1 overflow-hidden">
           <PanelGroup direction="horizontal">
             {/* Procedure Outline */}
-            <Panel defaultSize={20} minSize={15} maxSize={30} className="border-r border-border">
+            <Panel
+              defaultSize={15}
+              minSize={12}
+              maxSize={24}
+              className="border-r border-border"
+            >
               <div className="h-full flex flex-col">
                 <div className="px-4 py-2 border-b border-border bg-card/50 text-xs font-semibold">
                   Outline
@@ -94,7 +125,7 @@ export function CodeViewer({ file }: CodeViewerProps) {
           </PanelGroup>
         </div>
       </div>
-    )
+    );
   }
 
   // Default view for non-VBA files
@@ -141,19 +172,19 @@ export function CodeViewer({ file }: CodeViewerProps) {
         </div>
       </div>
     </ScrollArea>
-  )
+  );
 }
 
 interface CodeContentProps {
-  file: VBAFile
-  lines: string[]
-  selectedProcedure: Procedure | null
+  file: VBAFile;
+  lines: string[];
+  selectedProcedure: Procedure | null;
 }
 
 function CodeContent({ file, lines, selectedProcedure }: CodeContentProps) {
   // Highlight selected procedure lines
-  const highlightStart = selectedProcedure?.startLine || 0
-  const highlightEnd = selectedProcedure?.endLine || 0
+  const highlightStart = selectedProcedure?.startLine || 0;
+  const highlightEnd = selectedProcedure?.endLine || 0;
 
   return (
     <ScrollArea className="h-full">
@@ -162,14 +193,14 @@ function CodeContent({ file, lines, selectedProcedure }: CodeContentProps) {
         <div className="flex-1 overflow-hidden">
           <pre className="p-4 text-xs font-mono text-foreground">
             {lines.map((line, index) => {
-              const lineNum = index + 1
+              const lineNum = index + 1;
               const isHighlighted =
-                lineNum >= highlightStart && lineNum <= highlightEnd
+                lineNum >= highlightStart && lineNum <= highlightEnd;
 
               return (
                 <div
                   key={index}
-                  className={isHighlighted ? 'bg-primary/10' : ''}
+                  className={isHighlighted ? "bg-primary/10" : ""}
                 >
                   <span className="mr-4 text-muted-foreground select-none inline-block w-12 text-right pr-2">
                     {lineNum}
@@ -178,7 +209,7 @@ function CodeContent({ file, lines, selectedProcedure }: CodeContentProps) {
                     {line}
                   </code>
                 </div>
-              )
+              );
             })}
           </pre>
         </div>
@@ -191,5 +222,5 @@ function CodeContent({ file, lines, selectedProcedure }: CodeContentProps) {
         </div>
       </div>
     </ScrollArea>
-  )
+  );
 }

@@ -1,14 +1,14 @@
-'use client'
+"use client";
 
-import React from 'react'
-import { SearchMatch as SearchMatchType } from '@/features/search/file-search-index'
-import { HighlightText } from '@/components/search/highlight-text'
-import { cn } from '@/lib/utils'
+import React from "react";
+import { SearchMatch as SearchMatchType } from "@/features/search/file-search-index";
+import { HighlightText } from "@/components/search/highlight-text";
+import { cn } from "@/lib/utils";
 
 interface SearchMatchProps {
-  match: SearchMatchType
-  isSelected?: boolean
-  onClick?: () => void
+  match: SearchMatchType;
+  isSelected?: boolean;
+  onClick?: () => void;
 }
 
 /**
@@ -24,10 +24,10 @@ export function SearchMatch({
     <button
       onClick={onClick}
       className={cn(
-        'w-full text-left px-4 py-2 border-l-2 hover:bg-accent transition-colors',
+        "w-full text-left px-4 py-2 border-l-2 hover:bg-accent/20 transition-colors",
         isSelected
-          ? 'border-l-blue-500 bg-blue-500/10'
-          : 'border-l-transparent'
+          ? "border-l-blue-500 bg-blue-500/10"
+          : "border-l-transparent",
       )}
       title={`Line ${match.lineNumber}`}
     >
@@ -48,5 +48,5 @@ export function SearchMatch({
         </div>
       </div>
     </button>
-  )
+  );
 }
