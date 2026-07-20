@@ -3,6 +3,7 @@
 import React, { useState } from 'react'
 import { ChevronRight, ChevronDown, FileCode2, Folder } from 'lucide-react'
 import { VBAFile } from '@/types/index'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import { cn } from '@/lib/utils'
 
 interface FileTreeNode {
@@ -144,15 +145,17 @@ export function FileTree({
   const tree = buildFileTree(files)
 
   return (
-    <div className="text-sm">
-      {tree.map((node) => (
-        <FileTreeItem
-          key={node.path}
-          node={node}
-          onSelectFile={onSelectFile}
-          selectedFileId={selectedFileId}
-        />
-      ))}
-    </div>
+    <ScrollArea className="h-full w-full">
+      <div className="text-sm p-2">
+        {tree.map((node) => (
+          <FileTreeItem
+            key={node.path}
+            node={node}
+            onSelectFile={onSelectFile}
+            selectedFileId={selectedFileId}
+          />
+        ))}
+      </div>
+    </ScrollArea>
   )
 }

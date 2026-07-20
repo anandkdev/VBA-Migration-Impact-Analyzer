@@ -83,7 +83,7 @@ export function SearchView() {
 
         {/* Search Options */}
         {showOptions && (
-          <div className="space-y-3 pt-3 border-t border-border">
+          <div className="space-y-3 pt-3 border-t border-border max-h-64 overflow-y-auto">
             {/* Case and Regex Options */}
             <div className="space-y-2">
               <label className="flex items-center gap-2 text-sm cursor-pointer hover:bg-muted p-2 rounded">

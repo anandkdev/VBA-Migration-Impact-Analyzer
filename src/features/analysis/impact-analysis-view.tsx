@@ -112,7 +112,7 @@ export function ImpactAnalysisView() {
 
         {/* Filters */}
         {showFilters && results.length > 0 && (
-          <div className="space-y-3 pt-3 border-t border-border">
+          <div className="space-y-3 pt-3 border-t border-border max-h-80 overflow-y-auto">
             {/* Severity Filter */}
             <div className="space-y-2">
               <p className="text-xs font-semibold text-muted-foreground">
