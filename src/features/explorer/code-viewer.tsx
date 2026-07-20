@@ -128,9 +128,8 @@ export function CodeViewer({ file }: CodeViewerProps) {
     );
   }
 
-  // Default view for non-VBA files
   return (
-    <ScrollArea className="h-full">
+    <ScrollArea horizontal className="h-full">
       <div className="h-full flex flex-col bg-background">
         {/* File Header */}
         <div className="sticky top-0 border-b border-border bg-card/50 backdrop-blur px-4 py-3 z-10">
@@ -187,7 +186,7 @@ function CodeContent({ file, lines, selectedProcedure }: CodeContentProps) {
   const highlightEnd = selectedProcedure?.endLine || 0;
 
   return (
-    <ScrollArea className="h-full">
+    <ScrollArea horizontal className="h-full">
       <div className="h-full flex flex-col bg-background">
         {/* Code Content */}
         <div className="flex-1 overflow-hidden">

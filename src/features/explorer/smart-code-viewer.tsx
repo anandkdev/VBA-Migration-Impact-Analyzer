@@ -30,8 +30,8 @@ export function SmartCodeViewer({
   useSmartScroll(activeLineNumber ?? null, containerRef)
 
   return (
-    <ScrollArea className="h-full" ref={containerRef}>
-      <div className="bg-background">
+    <ScrollArea horizontal className="h-full bg-background rounded-md border border-border" ref={containerRef}>
+      <div className="flex flex-col min-w-max">
         <pre className="p-4 text-xs font-mono text-foreground">
           {lines.map((line, index) => {
             const lineNum = index + 1

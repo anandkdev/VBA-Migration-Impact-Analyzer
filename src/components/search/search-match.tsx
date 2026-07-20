@@ -24,7 +24,7 @@ export function SearchMatch({
     <button
       onClick={onClick}
       className={cn(
-        "w-full text-left px-4 py-2 border-l-2 hover:bg-accent/20 transition-colors",
+        "w-full text-left px-4 py-2 border-l-2 hover:bg-accent/20 transition-colors text-wrap",
         isSelected
           ? "border-l-blue-500 bg-blue-500/10"
           : "border-l-transparent",
@@ -38,7 +38,7 @@ export function SearchMatch({
         </div>
 
         {/* Line Content with Highlight */}
-        <div className="flex-1 font-mono text-sm truncate">
+        <div className="flex-1 min-w-0 font-mono text-sm break-words whitespace-pre-wrap">
           <HighlightText
             text={match.lineContent}
             matchStart={match.matchStart}
