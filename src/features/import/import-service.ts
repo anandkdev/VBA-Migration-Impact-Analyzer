@@ -122,6 +122,73 @@ export function getFileTypeDisplayName(type: VBAFileType): string {
   return names[type] || type.toUpperCase()
 }
 
+/**
+ * Import individual files selected by user
+ */
+export async function importFilesFromSelection(fileHandles: any[]): Promise<{
+  success: boolean
+  filesRead?: number
+  filesSkipped?: number
+  error?: string
+}> {
+  try {
+    const files: VBAFile[] = []
+    let skipped = 0
+
+    // Process each selected file
+    for (const fileHandle of fileHandles) {
+      const fileType = getFileType(fileHandle.name)
+
+      if (fileType) {
+        try {
+          const content = await readFileContent(fileHandle)
+          const vbaFile: VBAFile = {
+            id: `file_${Math.random().toString(36).substr(2, 9)}`,
+            name: fileHandle.name,
+            path: fileHandle.name,
+            type: fileType,
+            content,
+            createdAt: new Date(),
+            modifiedAt: new Date(),
+          }
+          files.push(vbaFile)
+        } catch (error) {
+          console.warn(`Failed to read file ${fileHandle.name}:`, error)
+          skipped++
+        }
+      } else {
+        skipped++
+      }
+    }
+
+    if (files.length === 0) {
+      return {
+        success: false,
+        error: 'No supported files found in selection',
+      }
+    }
+
+    // Update project store with files
+    const { clear, addFile } = useProjectStore.getState()
+    clear()
+
+    files.forEach((file) => {
+      addFile(file)
+    })
+
+    return {
+      success: true,
+      filesRead: files.length,
+      filesSkipped: skipped,
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: `Failed to import files: ${(error as Error).message}`,
+    }
+  }
+}
+
 export function getFileTypeIcon(type: VBAFileType): string {
   const icons: Record<VBAFileType, string> = {
     bas: '📄',
