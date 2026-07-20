@@ -1,15 +1,16 @@
 'use client'
 
-import React, { useState } from 'react'
+import React from 'react'
 import { PanelGroup, Panel, PanelResizeHandle } from 'react-resizable-panels'
 import { useProjectStore } from '@/store/project-store'
 import { FileTree } from '@/features/explorer/file-tree'
 import { CodeViewer } from '@/features/explorer/code-viewer'
-import { VBAFile } from '@/types/index'
 
 export function ProjectExplorer() {
-  const { files } = useProjectStore()
-  const [selectedFile, setSelectedFile] = useState<VBAFile | null>(null)
+  const { files, activeFileId, setActiveFile } = useProjectStore()
+
+  // Get the selected file from the store
+  const selectedFile = activeFileId ? files.find((f) => f.id === activeFileId) || null : null
 
   return (
     <div className="w-full h-full flex flex-col bg-background">
@@ -31,10 +32,8 @@ export function ProjectExplorer() {
               <div className="flex-1 overflow-hidden">
                 <FileTree
                   files={files}
-                  onSelectFile={(file) => {
-                    setSelectedFile(file)
-                  }}
-                  selectedFileId={selectedFile?.id}
+                  onSelectFile={(file) => setActiveFile(file.id)}
+                  selectedFileId={activeFileId || undefined}
                 />
               </div>
             </div>

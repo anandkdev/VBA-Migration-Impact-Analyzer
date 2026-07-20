@@ -1,7 +1,6 @@
 'use client'
 
-import React, { createContext, useState } from 'react'
-import { VBAModule } from '@/types/index'
+import React, { createContext } from 'react'
 import { Dashboard } from '@/features/dashboard/dashboard'
 import { ProjectExplorer } from '@/features/explorer/project-explorer'
 import { SearchView } from '@/features/search/search-view'
@@ -11,10 +10,11 @@ import { ReportsView } from '@/features/reports/reports-view'
 import { SettingsView } from '@/features/settings/settings-view'
 import { HelpView } from '@/features/help/help-view'
 import { EmptyState } from '@/components/empty-state'
+import { useProjectStore } from '@/store/project-store'
 
 export const ViewerContext = createContext<{
-  selectedModule: VBAModule | null
-  setSelectedModule: (module: VBAModule | null) => void
+  selectedModule: any | null
+  setSelectedModule: (module: any | null) => void
 }>({
   selectedModule: null,
   setSelectedModule: () => {},
@@ -25,7 +25,7 @@ interface MainViewerProps {
 }
 
 export function MainViewer({ activeSection }: MainViewerProps) {
-  const [selectedModule, setSelectedModule] = useState<VBAModule | null>(null)
+  const { selectedModule, setSelectedModule } = useProjectStore()
 
   const renderContent = () => {
     switch (activeSection) {

@@ -1,14 +1,15 @@
 'use client'
 
-import React, { useState } from 'react'
+import React from 'react'
 import { PanelGroup, Panel, PanelResizeHandle } from 'react-resizable-panels'
 import { Sidebar } from '@/components/sidebar'
 import { Toolbar } from '@/components/toolbar'
 import { MainViewer } from '@/components/main-viewer'
 import { Inspector } from '@/components/inspector'
+import { useProjectStore } from '@/store/project-store'
 
 export function AppShell() {
-  const [activeSection, setActiveSection] = useState<string>('dashboard')
+  const { activeSection, setActiveSection } = useProjectStore()
 
   return (
     <div className="flex flex-col h-screen bg-background text-foreground">
