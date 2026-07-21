@@ -9,7 +9,7 @@ import { DependencyGraph } from '@/features/graph/dependency-graph'
 import { ReportsView } from '@/features/reports/reports-view'
 import { SettingsView } from '@/features/settings/settings-view'
 import { HelpView } from '@/features/help/help-view'
-import { EmptyState } from '@/components/empty-state'
+import { EmptyState, EmptyStates } from '@/utils/empty-states'
 import { useProjectStore } from '@/store/project-store'
 
 export const ViewerContext = createContext<{
@@ -46,7 +46,12 @@ export function MainViewer({ activeSection }: MainViewerProps) {
       case 'help':
         return <HelpView />
       default:
-        return <EmptyState />
+        return (
+          <EmptyState
+            {...EmptyStates.noData}
+            action={undefined}
+          />
+        )
     }
   }
 

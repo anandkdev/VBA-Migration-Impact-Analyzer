@@ -144,13 +144,26 @@ export function SettingsView() {
             <label className="flex items-center gap-3 p-4 rounded-lg border border-border hover:bg-accent cursor-pointer">
               <input
                 type="checkbox"
-                checked={searchOptions.useRegex}
-                onChange={(e) => updateSearchOptions({ useRegex: e.target.checked })}
+                checked={searchOptions.matchRegex}
+                onChange={(e) => updateSearchOptions({ matchRegex: e.target.checked })}
                 className="w-4 h-4 rounded"
               />
               <div className="flex-1">
                 <p className="font-medium text-sm">Use Regular Expressions</p>
                 <p className="text-xs text-muted-foreground">Default to regex search mode</p>
+              </div>
+            </label>
+
+            <label className="flex items-center gap-3 p-4 rounded-lg border border-border hover:bg-accent cursor-pointer">
+              <input
+                type="checkbox"
+                checked={searchOptions.wholeWord}
+                onChange={(e) => updateSearchOptions({ wholeWord: e.target.checked })}
+                className="w-4 h-4 rounded"
+              />
+              <div className="flex-1">
+                <p className="font-medium text-sm">Match Whole Words</p>
+                <p className="text-xs text-muted-foreground">Only match complete words</p>
               </div>
             </label>
 

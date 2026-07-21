@@ -1,4 +1,4 @@
-export type VBAFileType = 'bas' | 'cls' | 'frm' | 'xlsm' | 'xls' | 'xlsx' | 'txt' | 'csv'
+export type VBAFileType = 'bas' | 'cls' | 'frm' | 'xlsm' | 'xls' | 'xlsx' | 'txt' | 'csv' | 'sql' | 'xml' | 'json' | 'png' | 'jpg' | 'jpeg' | 'gif' | 'svg' | 'pdf'
 
 export type ModuleType = 'Module' | 'Class' | 'Form' | 'Workbook' | 'Worksheet'
 
@@ -10,6 +10,8 @@ export interface VBAFile {
   path: string
   type: VBAFileType
   content: string
+  blobUrl?: string
+  sheetData?: Array<{ name: string; rows: any[] }>
   createdAt: Date
   modifiedAt: Date
 }

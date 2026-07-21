@@ -1,60 +1,95 @@
 'use client'
 
 import React from 'react'
-import { Settings, Moon, Sun } from 'lucide-react'
-import { useTheme } from '@/hooks/use-theme'
+import { Search, Settings2, BarChart3, Moon, Sun, Menu } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useTheme } from '@/hooks/use-theme'
+import { useModeStore } from '@/store/mode-store'
+import { ImportDialog } from '@/features/import/import-dialog'
+import { FiltersPopover } from '@/features/filters/filters-popover'
 
 interface ToolbarProps {
-  activeSection: string
+  onSettingsOpen?: () => void
+  onStatisticsOpen?: () => void
 }
 
-const SECTION_TITLES: Record<string, string> = {
-  dashboard: 'Dashboard',
-  explorer: 'Project Explorer',
-  search: 'Search',
-  analysis: 'Impact Analysis',
-  graph: 'Dependency Graph',
-  reports: 'Reports',
-  settings: 'Settings',
-}
-
-export function Toolbar({ activeSection }: ToolbarProps) {
+export function Toolbar({ onSettingsOpen, onStatisticsOpen }: ToolbarProps) {
   const { isDark, toggleTheme } = useTheme()
+  const { currentMode, setMode } = useModeStore()
 
   return (
-    <div className="h-12 border-b border-border bg-card flex items-center justify-between px-4 gap-4">
+    <div className="h-12 border-b border-border bg-card flex items-center justify-between px-4 gap-3">
+      {/* Left: Logo & Title */}
       <div className="flex items-center gap-3">
         <div className="flex items-center justify-center w-8 h-8 rounded bg-primary text-primary-foreground font-bold text-sm">
           VBA
         </div>
-        <h1 className="text-lg font-semibold tracking-tight">
-          {SECTION_TITLES[activeSection] || 'VBA Migration Impact Analyzer'}
-        </h1>
+        <div className="flex flex-col">
+          <h1 className="text-sm font-semibold leading-none">VBA Project Studio</h1>
+          <p className="text-xs text-muted-foreground">Analyze • Understand • Migrate • Refactor</p>
+        </div>
       </div>
 
-      <div className="flex items-center gap-2">
+      {/* Center: Action Buttons */}
+      <div className="flex items-center gap-1">
+        <ImportDialog />
+
+        <Button
+          variant={currentMode === 'explorer' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => setMode('explorer')}
+          className="gap-2"
+          title="Explorer Mode (browse and analyze)"
+        >
+          <Menu className="w-4 h-4" />
+          Explorer
+        </Button>
+
+        <Button
+          variant={currentMode === 'search' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => setMode('search')}
+          className="gap-2"
+          title="Search Mode (search and export)"
+        >
+          <Search className="w-4 h-4" />
+          Search
+        </Button>
+
+        <FiltersPopover />
+
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onStatisticsOpen}
+          className="gap-2"
+          title="Project Statistics"
+        >
+          <BarChart3 className="w-4 h-4" />
+          Statistics
+        </Button>
+      </div>
+
+      {/* Right: Theme, Settings, Sidebar Toggle */}
+      <div className="flex items-center gap-1">
         <Button
           variant="ghost"
           size="sm"
           onClick={toggleTheme}
-          className="gap-2"
+          className="w-9 h-9 p-0"
           title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
         >
-          {isDark ? (
-            <Sun className="w-4 h-4" />
-          ) : (
-            <Moon className="w-4 h-4" />
-          )}
+          {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
         </Button>
 
         <Button
           variant="ghost"
           size="sm"
-          className="gap-2"
+          onClick={onSettingsOpen}
+          className="w-9 h-9 p-0"
           title="Settings"
         >
-          <Settings className="w-4 h-4" />
+          <Settings2 className="w-4 h-4" />
         </Button>
       </div>
     </div>

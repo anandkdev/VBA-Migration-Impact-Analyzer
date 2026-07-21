@@ -21,17 +21,23 @@ import {
 } from 'lucide-react'
 
 export function Dashboard() {
-  const { files, modules, projectName } = useProjectStore()
+  const { files, projectName, stats: projectStats } = useProjectStore()
 
-  // Calculate statistics
-  const stats = {
-    totalFiles: files.length,
-    modules: modules.filter((m) => m.type === 'Module').length,
-    classes: modules.filter((m) => m.type === 'Class').length,
-    forms: modules.filter((m) => m.type === 'Form').length,
-    worksheets: files.filter((f) => ['xlsm', 'xls', 'xlsx'].includes(f.type)).length,
-    procedures: modules.reduce((sum, m) => sum + m.procedures.length, 0),
-    variables: modules.reduce((sum, m) => sum + m.variables.length, 0),
+  const stats = projectStats || {
+    totalModules: 0,
+    largestModule: null,
+    largestProcedure: null,
+    unusedVariables: [],
+    duplicateProcedures: [],
+    workbookEvents: 0,
+    worksheetEvents: 0,
+    sqlReferences: 0,
+    totalFiles: 0,
+    totalProcedures: 0,
+    totalVariables: 0,
+    totalConstants: 0,
+    totalEnums: 0,
+    totalTypes: 0,
   }
 
   const statCards: Array<{
@@ -39,16 +45,16 @@ export function Dashboard() {
     value: string | number
     icon: typeof FileCode2
   }> = [
-    { label: 'Total Files', value: stats.totalFiles, icon: FileCode2 },
-    { label: 'Modules', value: stats.modules, icon: Boxes },
-    { label: 'Classes', value: stats.classes, icon: SquareCode },
-    { label: 'UserForms', value: stats.forms, icon: FileText },
-    { label: 'Worksheets', value: stats.worksheets, icon: Sheet },
-    { label: 'Procedures', value: stats.procedures, icon: Zap },
-    { label: 'Variables', value: stats.variables, icon: Package },
-    { label: 'Queries', value: '0', icon: Database },
-    { label: 'Named Ranges', value: '0', icon: Grid3x3 },
-    { label: 'Total References', value: '0', icon: Grid3x3 },
+    { label: 'Total Files', value: stats.totalFiles || files.length, icon: FileCode2 },
+    { label: 'Modules', value: stats.totalModules, icon: Boxes },
+    { label: 'Procedures', value: stats.totalProcedures, icon: Zap },
+    { label: 'Variables', value: stats.totalVariables, icon: Package },
+    { label: 'Constants', value: stats.totalConstants, icon: SquareCode },
+    { label: 'Enums', value: stats.totalEnums, icon: Grid3x3 },
+    { label: 'Types', value: stats.totalTypes, icon: FileText },
+    { label: 'SQL Queries', value: stats.sqlReferences, icon: Database },
+    { label: 'Workbook Events', value: stats.workbookEvents, icon: Sheet },
+    { label: 'Worksheet Events', value: stats.worksheetEvents, icon: Grid3x3 },
   ]
 
   const IMPACT_CARDS: Array<{
@@ -57,9 +63,9 @@ export function Dashboard() {
     icon: typeof AlertTriangle
     variant: 'destructive' | 'warning' | 'success'
   }> = [
-    { label: 'High Impact', value: '0', icon: AlertTriangle, variant: 'destructive' },
-    { label: 'Medium Impact', value: '0', icon: AlertCircle, variant: 'warning' },
-    { label: 'Low Impact', value: '0', icon: CheckCircle2, variant: 'success' },
+    { label: 'Unused Variables', value: stats.unusedVariables.length.toString(), icon: AlertTriangle, variant: 'warning' },
+    { label: 'Duplicate Procedures', value: stats.duplicateProcedures.length.toString(), icon: AlertCircle, variant: 'warning' },
+    { label: 'Largest Procedure', value: stats.largestProcedure?.lines.toString() || '0', icon: CheckCircle2, variant: 'success' },
   ]
   return (
     <ScrollArea className="h-full w-full">

@@ -4,11 +4,13 @@ import React, { useState } from 'react'
 import { PanelGroup, Panel, PanelResizeHandle } from 'react-resizable-panels'
 import { FileTreeSkeleton } from '@/components/loaders/skeleton-loader'
 import { useProjectStore } from '@/store/project-store'
+import { useExplorerStore } from '@/store/explorer-store'
 import { FileTree } from '@/features/explorer/file-tree'
-import { CodeViewer } from '@/features/explorer/code-viewer'
+import { SmartViewer } from '@/features/viewer/smart-viewer'
 
 export function ProjectExplorer() {
-  const { files, activeFileId, setActiveFile } = useProjectStore()
+  const { files } = useProjectStore()
+  const { selectedFileId, setSelectedFile } = useExplorerStore()
   const [isLoadingTree, setIsLoadingTree] = useState(false)
 
   // Simulate file tree loading
@@ -19,9 +21,6 @@ export function ProjectExplorer() {
       return () => clearTimeout(timer)
     }
   }, [files])
-
-  // Get the selected file from the store
-  const selectedFile = activeFileId ? files.find((f) => f.id === activeFileId) || null : null
 
   return (
     <div className="w-full h-full flex flex-col bg-background">
@@ -46,8 +45,8 @@ export function ProjectExplorer() {
                 ) : (
                   <FileTree
                     files={files}
-                    onSelectFile={(file) => setActiveFile(file.id)}
-                    selectedFileId={activeFileId || undefined}
+                    onSelectFile={(file) => setSelectedFile(file.id)}
+                    selectedFileId={selectedFileId || undefined}
                   />
                 )}
               </div>
@@ -56,9 +55,9 @@ export function ProjectExplorer() {
 
           <PanelResizeHandle className="w-1 bg-border hover:bg-primary/50 transition-colors" />
 
-          {/* Code Viewer */}
+          {/* Smart Viewer */}
           <Panel defaultSize={70} minSize={50}>
-            <CodeViewer file={selectedFile} />
+            <SmartViewer />
           </Panel>
         </PanelGroup>
       )}
