@@ -4,11 +4,13 @@ import React, { useState } from 'react'
 import { PanelGroup, Panel, PanelResizeHandle } from 'react-resizable-panels'
 import { FileTreeSkeleton } from '@/components/loaders/skeleton-loader'
 import { useProjectStore } from '@/store/project-store'
+import { useExplorerStore } from '@/store/explorer-store'
 import { FileTree } from '@/features/explorer/file-tree'
 import { SmartViewer } from '@/features/viewer/smart-viewer'
 
 export function ProjectExplorer() {
-  const { files, modules, activeFileId, setActiveFile, setSelectedModule } = useProjectStore()
+  const { files } = useProjectStore()
+  const { selectedFileId, setSelectedFile } = useExplorerStore()
   const [isLoadingTree, setIsLoadingTree] = useState(false)
 
   // Simulate file tree loading
@@ -19,19 +21,6 @@ export function ProjectExplorer() {
       return () => clearTimeout(timer)
     }
   }, [files])
-
-  // Get the selected file from the store
-  const selectedFile = activeFileId ? files.find((f) => f.id === activeFileId) || null : null
-
-  // Wire selectedModule when a file is selected
-  React.useEffect(() => {
-    if (selectedFile) {
-      const module = modules.find((m) => m.fileId === selectedFile.id)
-      setSelectedModule(module || null)
-    } else {
-      setSelectedModule(null)
-    }
-  }, [selectedFile, modules, setSelectedModule])
 
   return (
     <div className="w-full h-full flex flex-col bg-background">
@@ -56,12 +45,8 @@ export function ProjectExplorer() {
                 ) : (
                   <FileTree
                     files={files}
-                    onSelectFile={(file) => {
-                      setActiveFile(file.id)
-                      const module = modules.find((m) => m.fileId === file.id)
-                      setSelectedModule(module || null)
-                    }}
-                    selectedFileId={activeFileId || undefined}
+                    onSelectFile={(file) => setSelectedFile(file.id)}
+                    selectedFileId={selectedFileId || undefined}
                   />
                 )}
               </div>
@@ -72,7 +57,7 @@ export function ProjectExplorer() {
 
           {/* Smart Viewer */}
           <Panel defaultSize={70} minSize={50}>
-            <SmartViewer file={selectedFile} />
+            <SmartViewer />
           </Panel>
         </PanelGroup>
       )}

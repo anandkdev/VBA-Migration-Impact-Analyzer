@@ -1,30 +1,21 @@
 'use client'
 
 import React from 'react'
-import {
-  Search,
-  Settings2,
-  BarChart3,
-  FileText,
-  Moon,
-  Sun,
-  HelpCircle,
-} from 'lucide-react'
+import { Search, Settings2, BarChart3, Moon, Sun, Menu } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useTheme } from '@/hooks/use-theme'
-import { useLayoutStore } from '@/store/layout-store'
-import { FiltersPopover } from '@/features/filters/filters-popover'
+import { useModeStore } from '@/store/mode-store'
 import { ImportDialog } from '@/features/import/import-dialog'
+import { FiltersPopover } from '@/features/filters/filters-popover'
 
-export function Toolbar() {
+interface ToolbarProps {
+  onSettingsOpen?: () => void
+  onStatisticsOpen?: () => void
+}
+
+export function Toolbar({ onSettingsOpen, onStatisticsOpen }: ToolbarProps) {
   const { isDark, toggleTheme } = useTheme()
-  const {
-    setActiveBottomTab,
-    setBottomPanelOpen,
-    setStatisticsOpen,
-    setSettingsOpen,
-    setHelpOpen,
-  } = useLayoutStore()
+  const { currentMode, setMode } = useModeStore()
 
   return (
     <div className="h-12 border-b border-border bg-card flex items-center justify-between px-4 gap-3">
@@ -44,14 +35,22 @@ export function Toolbar() {
         <ImportDialog />
 
         <Button
-          variant="outline"
+          variant={currentMode === 'explorer' ? 'default' : 'outline'}
           size="sm"
-          onClick={() => {
-            setActiveBottomTab('search')
-            setBottomPanelOpen(true)
-          }}
+          onClick={() => setMode('explorer')}
           className="gap-2"
-          title="Open Search (Ctrl+F)"
+          title="Explorer Mode (browse and analyze)"
+        >
+          <Menu className="w-4 h-4" />
+          Explorer
+        </Button>
+
+        <Button
+          variant={currentMode === 'search' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => setMode('search')}
+          className="gap-2"
+          title="Search Mode (search and export)"
         >
           <Search className="w-4 h-4" />
           Search
@@ -62,30 +61,16 @@ export function Toolbar() {
         <Button
           variant="outline"
           size="sm"
-          onClick={() => setStatisticsOpen(true)}
+          onClick={onStatisticsOpen}
           className="gap-2"
           title="Project Statistics"
         >
           <BarChart3 className="w-4 h-4" />
           Statistics
         </Button>
-
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            setActiveBottomTab('reports')
-            setBottomPanelOpen(true)
-          }}
-          className="gap-2"
-          title="Open Reports"
-        >
-          <FileText className="w-4 h-4" />
-          Reports
-        </Button>
       </div>
 
-      {/* Right: Theme, Settings, Help */}
+      {/* Right: Theme, Settings, Sidebar Toggle */}
       <div className="flex items-center gap-1">
         <Button
           variant="ghost"
@@ -94,31 +79,17 @@ export function Toolbar() {
           className="w-9 h-9 p-0"
           title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
         >
-          {isDark ? (
-            <Sun className="w-4 h-4" />
-          ) : (
-            <Moon className="w-4 h-4" />
-          )}
+          {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
         </Button>
 
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => setSettingsOpen(true)}
+          onClick={onSettingsOpen}
           className="w-9 h-9 p-0"
           title="Settings"
         >
           <Settings2 className="w-4 h-4" />
-        </Button>
-
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setHelpOpen(true)}
-          className="w-9 h-9 p-0"
-          title="Help"
-        >
-          <HelpCircle className="w-4 h-4" />
         </Button>
       </div>
     </div>

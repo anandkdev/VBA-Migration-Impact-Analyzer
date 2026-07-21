@@ -2,14 +2,16 @@
 
 import React from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { useLayoutStore } from '@/store/layout-store'
 import { Dashboard } from '@/features/dashboard/dashboard'
 
-export function StatisticsOverlay() {
-  const { statisticsOpen, setStatisticsOpen } = useLayoutStore()
+interface StatisticsOverlayProps {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}
 
+export function StatisticsOverlay({ open, onOpenChange }: StatisticsOverlayProps) {
   return (
-    <Dialog open={statisticsOpen} onOpenChange={setStatisticsOpen}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[80vh]">
         <DialogHeader>
           <DialogTitle>Project Statistics</DialogTitle>
