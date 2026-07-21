@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { VBAFile, VBAModule, Procedure } from '@/types/index'
+import type { ProjectStats } from '@/core/types'
 
 interface NavigationState {
   activeSection: string
@@ -16,9 +17,11 @@ interface ProjectState extends NavigationState {
   projectName: string
   files: VBAFile[]
   modules: VBAModule[]
+  stats: ProjectStats | null
   setProjectName: (name: string) => void
   addFile: (file: VBAFile) => void
   addModule: (module: VBAModule) => void
+  setProject: (files: VBAFile[], modules: VBAModule[], stats: ProjectStats) => void
   setActiveSection: (section: string) => void
   setActiveFile: (fileId: string | null, lineNumber?: number) => void
   setActiveLineNumber: (lineNumber: number | null) => void
@@ -34,6 +37,7 @@ export const useProjectStore = create<ProjectState>((set) => ({
   projectName: '',
   files: [],
   modules: [],
+  stats: null,
   activeSection: 'dashboard',
   activeFileId: null,
   activeLineNumber: null,
@@ -54,6 +58,8 @@ export const useProjectStore = create<ProjectState>((set) => ({
     set((state) => ({
       modules: [...state.modules, module],
     })),
+
+  setProject: (files, modules, stats) => set({ files, modules, stats }),
 
   setActiveSection: (section) => set({ activeSection: section }),
 
@@ -91,6 +97,7 @@ export const useProjectStore = create<ProjectState>((set) => ({
       projectName: '',
       files: [],
       modules: [],
+      stats: null,
       activeSection: 'dashboard',
       activeFileId: null,
       activeLineNumber: null,

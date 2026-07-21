@@ -1,5 +1,7 @@
 import { VBAFile, VBAFileType } from '@/types/index'
 import { useProjectStore } from '@/store/project-store'
+import { analyzeProject } from '@/core/analysis-engine'
+import * as XLSX from 'xlsx'
 
 const SUPPORTED_EXTENSIONS = new Set([
   '.bas',
@@ -10,6 +12,15 @@ const SUPPORTED_EXTENSIONS = new Set([
   '.xlsx',
   '.txt',
   '.csv',
+  '.sql',
+  '.xml',
+  '.json',
+  '.png',
+  '.jpg',
+  '.jpeg',
+  '.gif',
+  '.svg',
+  '.pdf',
 ])
 
 function getFileType(filename: string): VBAFileType | null {
@@ -20,10 +31,32 @@ function getFileType(filename: string): VBAFileType | null {
   return null
 }
 
-async function readFileContent(fileHandle: any): Promise<string> {
+async function readFileContent(fileHandle: any): Promise<{ content: string; blobUrl?: string; sheetData?: Array<{ name: string; rows: any[] }> }> {
   const file = await fileHandle.getFile()
+  const ext = file.name.toLowerCase().slice(file.name.lastIndexOf('.'))
+
+  // Binary types: create blob URL
+  if (['.png', '.jpg', '.jpeg', '.gif', '.svg', '.pdf'].includes(ext)) {
+    const blobUrl = URL.createObjectURL(file)
+    return { content: '', blobUrl }
+  }
+
+  // Excel files: parse sheets
+  if (['.xls', '.xlsx', '.xlsm'].includes(ext)) {
+    const arrayBuffer = await file.arrayBuffer()
+    const workbook = XLSX.read(arrayBuffer, { type: 'array' })
+    const sheetData = workbook.SheetNames.map((name) => {
+      const worksheet = workbook.Sheets[name]
+      const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[]
+      return { name, rows }
+    })
+    const text = await file.text()
+    return { content: text, sheetData }
+  }
+
+  // Text files
   const text = await file.text()
-  return text
+  return { content: text }
 }
 
 async function walkDirectory(
@@ -40,13 +73,15 @@ async function walkDirectory(
         const fileType = getFileType(entry.name)
         if (fileType) {
           try {
-            const content = await readFileContent(entry)
+            const fileData = await readFileContent(entry)
             const vbaFile: VBAFile = {
               id: `file_${Math.random().toString(36).substr(2, 9)}`,
               name: entry.name,
               path: entryPath,
               type: fileType,
-              content,
+              content: fileData.content,
+              ...(fileData.blobUrl && { blobUrl: fileData.blobUrl }),
+              ...(fileData.sheetData && { sheetData: fileData.sheetData }),
               createdAt: new Date(),
               modifiedAt: new Date(),
             }
@@ -87,13 +122,12 @@ export async function importProjectFromFolder(dirHandle: any): Promise<{
       }
     }
 
-    // Update project store with files
-    const { clear, addFile } = useProjectStore.getState()
-    clear()
+    // Analyze project
+    const { modules, stats } = analyzeProject(files)
 
-    files.forEach((file) => {
-      addFile(file)
-    })
+    // Update project store with files, modules, and stats
+    const { setProject } = useProjectStore.getState()
+    setProject(files, modules, stats)
 
     return {
       success: true,
@@ -118,6 +152,15 @@ export function getFileTypeDisplayName(type: VBAFileType): string {
     xlsx: 'Excel Workbook',
     txt: 'Text File',
     csv: 'CSV File',
+    sql: 'SQL Script',
+    xml: 'XML File',
+    json: 'JSON File',
+    png: 'PNG Image',
+    jpg: 'JPG Image',
+    jpeg: 'JPEG Image',
+    gif: 'GIF Image',
+    svg: 'SVG Image',
+    pdf: 'PDF Document',
   }
   return names[type] || type.toUpperCase()
 }
@@ -132,6 +175,15 @@ export function getFileTypeIcon(type: VBAFileType): string {
     xlsx: '📊',
     txt: '📝',
     csv: '🗂️',
+    sql: '🗄️',
+    xml: '📦',
+    json: '{ }',
+    png: '🖼️',
+    jpg: '🖼️',
+    jpeg: '🖼️',
+    gif: '🖼️',
+    svg: '🖼️',
+    pdf: '📕',
   }
   return icons[type] || '📄'
 }

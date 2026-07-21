@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { ChevronRight, ChevronDown, FileCode2, Folder } from "lucide-react";
 import { VBAFile } from "@/types/index";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { EmptyState, EmptyStates } from "@/utils/empty-states";
 import { cn } from "@/lib/utils";
 
 interface FileTreeNode {
@@ -21,41 +22,59 @@ interface FileTreeProps {
 }
 
 function buildFileTree(files: VBAFile[]): FileTreeNode[] {
-  const root: Record<string, FileTreeNode> = {};
+  const root: FileTreeNode[] = [];
+  const folderMap = new Map<string, FileTreeNode>();
 
   files.forEach((file) => {
     const parts = file.path.split("/");
-    let current = root;
 
-    parts.forEach((part, index) => {
-      const isFile = index === parts.length - 1;
-      const key = part;
+    for (let i = 0; i < parts.length; i++) {
+      const partPath = parts.slice(0, i + 1).join("/");
+      const isFile = i === parts.length - 1;
 
-      if (!current[key]) {
-        current[key] = {
-          type: isFile ? "file" : "folder",
-          name: part,
-          path: parts.slice(0, index + 1).join("/"),
-          ...(isFile && { file }),
-        };
+      if (folderMap.has(partPath)) {
+        continue;
       }
 
-      if (!isFile) {
-        if (!current[key].children) {
-          current[key].children = [];
+      const node: FileTreeNode = {
+        type: isFile ? "file" : "folder",
+        name: parts[i],
+        path: partPath,
+        ...(isFile && { file }),
+      };
+
+      if (i === 0) {
+        root.push(node);
+        folderMap.set(partPath, node);
+      } else {
+        const parentPath = parts.slice(0, i).join("/");
+        const parent = folderMap.get(parentPath);
+        if (parent) {
+          if (!parent.children) {
+            parent.children = [];
+          }
+          parent.children.push(node);
+          folderMap.set(partPath, node);
         }
-        current = current[key].children.reduce(
-          (acc, child) => ({ ...acc, [child.name]: child }),
-          {},
-        );
+      }
+    }
+  });
+
+  // Sort recursively
+  const sort = (nodes: FileTreeNode[]): FileTreeNode[] => {
+    const sorted = nodes.sort((a, b) => {
+      if (a.type !== b.type) return a.type === "folder" ? -1 : 1;
+      return a.name.localeCompare(b.name);
+    });
+    sorted.forEach((node) => {
+      if (node.children) {
+        node.children = sort(node.children);
       }
     });
-  });
+    return sorted;
+  };
 
-  return Object.values(root).sort((a, b) => {
-    if (a.type !== b.type) return a.type === "folder" ? -1 : 1;
-    return a.name.localeCompare(b.name);
-  });
+  return sort(root);
 }
 
 function FileTreeItem({
@@ -134,12 +153,11 @@ export function FileTree({
 }: FileTreeProps) {
   if (files.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-full gap-3 text-muted-foreground">
-        <Folder className="w-8 h-8 opacity-50" />
-        <p className="text-sm">No files imported yet</p>
-        <p className="text-xs">
-          Use the "Import Project" button to get started
-        </p>
+      <div className="h-full flex items-center justify-center p-4">
+        <EmptyState
+          {...EmptyStates.noProject}
+          action={undefined}
+        />
       </div>
     );
   }

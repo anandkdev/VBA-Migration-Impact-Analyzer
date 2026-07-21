@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { PanelGroup, Panel, PanelResizeHandle } from "react-resizable-panels";
 import { VBAFile, Procedure } from "@/types/index";
 import {

@@ -5,10 +5,10 @@ import { PanelGroup, Panel, PanelResizeHandle } from 'react-resizable-panels'
 import { FileTreeSkeleton } from '@/components/loaders/skeleton-loader'
 import { useProjectStore } from '@/store/project-store'
 import { FileTree } from '@/features/explorer/file-tree'
-import { CodeViewer } from '@/features/explorer/code-viewer'
+import { SmartViewer } from '@/features/viewer/smart-viewer'
 
 export function ProjectExplorer() {
-  const { files, activeFileId, setActiveFile } = useProjectStore()
+  const { files, modules, activeFileId, setActiveFile, setSelectedModule } = useProjectStore()
   const [isLoadingTree, setIsLoadingTree] = useState(false)
 
   // Simulate file tree loading
@@ -22,6 +22,16 @@ export function ProjectExplorer() {
 
   // Get the selected file from the store
   const selectedFile = activeFileId ? files.find((f) => f.id === activeFileId) || null : null
+
+  // Wire selectedModule when a file is selected
+  React.useEffect(() => {
+    if (selectedFile) {
+      const module = modules.find((m) => m.fileId === selectedFile.id)
+      setSelectedModule(module || null)
+    } else {
+      setSelectedModule(null)
+    }
+  }, [selectedFile, modules, setSelectedModule])
 
   return (
     <div className="w-full h-full flex flex-col bg-background">
@@ -46,7 +56,11 @@ export function ProjectExplorer() {
                 ) : (
                   <FileTree
                     files={files}
-                    onSelectFile={(file) => setActiveFile(file.id)}
+                    onSelectFile={(file) => {
+                      setActiveFile(file.id)
+                      const module = modules.find((m) => m.fileId === file.id)
+                      setSelectedModule(module || null)
+                    }}
                     selectedFileId={activeFileId || undefined}
                   />
                 )}
@@ -56,9 +70,9 @@ export function ProjectExplorer() {
 
           <PanelResizeHandle className="w-1 bg-border hover:bg-primary/50 transition-colors" />
 
-          {/* Code Viewer */}
+          {/* Smart Viewer */}
           <Panel defaultSize={70} minSize={50}>
-            <CodeViewer file={selectedFile} />
+            <SmartViewer file={selectedFile} />
           </Panel>
         </PanelGroup>
       )}
