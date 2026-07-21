@@ -5,7 +5,8 @@ interface SettingsState {
   theme: 'light' | 'dark' | 'system'
   searchOptions: {
     caseSensitive: boolean
-    useRegex: boolean
+    wholeWord: boolean
+    matchRegex: boolean
     ignoreComments: boolean
   }
   exportDefaults: {
@@ -35,7 +36,8 @@ const defaultSettings = {
   theme: 'system' as const,
   searchOptions: {
     caseSensitive: false,
-    useRegex: false,
+    wholeWord: false,
+    matchRegex: false,
     ignoreComments: true,
   },
   exportDefaults: {

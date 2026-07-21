@@ -123,11 +123,11 @@ export async function importProjectFromFolder(dirHandle: any): Promise<{
     }
 
     // Analyze project
-    const { modules, stats } = analyzeProject(files)
+    const { modules, stats, symbolIndex } = analyzeProject(files)
 
-    // Update project store with files, modules, and stats
+    // Update project store with files, modules, stats, and symbolIndex
     const { setProject } = useProjectStore.getState()
-    setProject(files, modules, stats)
+    setProject(files, modules, stats, symbolIndex)
 
     return {
       success: true,

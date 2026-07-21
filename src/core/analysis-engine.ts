@@ -1,6 +1,7 @@
 import { VBAFile, VBAModule } from '@/types/index'
 import { parseProjectModules } from '@/features/parser/vba-parser'
 import { AnalysisResult, ProjectStats } from './types'
+import { buildSymbolIndex } from './symbol-index'
 
 export function analyzeProject(files: VBAFile[]): AnalysisResult {
   const modules = parseProjectModules(
@@ -13,10 +14,12 @@ export function analyzeProject(files: VBAFile[]): AnalysisResult {
   )
 
   const stats = calculateStats(modules)
+  const symbolIndex = buildSymbolIndex(files, modules)
 
   return {
     modules,
     stats,
+    symbolIndex,
   }
 }
 

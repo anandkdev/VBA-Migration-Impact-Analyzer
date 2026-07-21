@@ -1,8 +1,11 @@
 'use client'
 
-import React from 'react'
-import { IndexedItem } from '@/features/search/search-index'
+import React, { useMemo, useState } from 'react'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { useProjectStore } from '@/store/project-store'
+import { searchSymbolIndex } from '@/core/symbol-index'
+import type { IndexedItem } from '@/core/symbol-index'
+import type { SearchOptions } from '@/features/search/file-search-index'
 import {
   Zap,
   Package,
@@ -15,8 +18,8 @@ import {
 } from 'lucide-react'
 
 interface SearchResultsProps {
-  results: IndexedItem[]
-  isLoading?: boolean
+  query: string
+  searchOptions?: Partial<SearchOptions>
   onSelectResult?: (result: IndexedItem) => void
 }
 
@@ -58,19 +61,43 @@ function getTypeLabel(type: string): string {
 }
 
 export function SearchResults({
-  results,
-  isLoading,
+  query,
+  searchOptions,
   onSelectResult,
 }: SearchResultsProps) {
-  if (isLoading) {
+  const { symbolIndex } = useProjectStore()
+  const [selectedObjectTypes, setSelectedObjectTypes] = useState<string[]>([])
+
+  const results = useMemo(() => {
+    if (!symbolIndex || !query.trim()) return []
+    return searchSymbolIndex(symbolIndex, query, {
+      ...searchOptions,
+      objectTypes: selectedObjectTypes.length > 0 ? selectedObjectTypes : undefined,
+    })
+  }, [symbolIndex, query, searchOptions, selectedObjectTypes])
+
+  const objectTypeOptions = [
+    'procedure',
+    'variable',
+    'constant',
+    'enum',
+    'type',
+    'module',
+    'comment',
+  ] as const
+
+  if (!symbolIndex) {
     return (
       <div className="flex items-center justify-center h-full text-muted-foreground">
-        <p className="text-sm">Searching...</p>
+        <div className="text-center">
+          <p className="text-sm mb-1">No project imported</p>
+          <p className="text-xs">Import a project to search symbols</p>
+        </div>
       </div>
     )
   }
 
-  if (results.length === 0) {
+  if (results.length === 0 && query.trim()) {
     return (
       <div className="flex items-center justify-center h-full text-muted-foreground">
         <div className="text-center">
@@ -81,9 +108,48 @@ export function SearchResults({
     )
   }
 
+  if (!query.trim()) {
+    return (
+      <div className="flex items-center justify-center h-full text-muted-foreground">
+        <div className="text-center">
+          <p className="text-sm mb-2">Enter a search term</p>
+          <p className="text-xs">Search for procedures, variables, and more</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <ScrollArea className="h-full">
-      <div className="p-3 space-y-2">
+    <div className="h-full flex flex-col">
+      {/* Object Type Filter */}
+      <div className="px-4 py-2 border-b border-border bg-card/50">
+        <p className="text-xs font-semibold mb-2 text-muted-foreground">Object Type</p>
+        <div className="flex flex-wrap gap-1">
+          {objectTypeOptions.map((type) => (
+            <button
+              key={type}
+              onClick={() =>
+                setSelectedObjectTypes((prev) =>
+                  prev.includes(type)
+                    ? prev.filter((t) => t !== type)
+                    : [...prev, type]
+                )
+              }
+              className={`px-2 py-0.5 rounded text-xs transition-colors ${
+                selectedObjectTypes.includes(type)
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-muted hover:bg-muted/80'
+              }`}
+            >
+              {type}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Results List */}
+      <ScrollArea className="flex-1">
+        <div className="p-3 space-y-2">
         {results.length > 0 && (
           <div className="text-xs text-muted-foreground sticky top-0 bg-background/50 backdrop-blur py-2 px-2">
             {results.length} result{results.length !== 1 ? 's' : ''} found
@@ -148,7 +214,8 @@ export function SearchResults({
             </div>
           </button>
         ))}
-      </div>
-    </ScrollArea>
+        </div>
+      </ScrollArea>
+    </div>
   )
 }

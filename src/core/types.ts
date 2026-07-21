@@ -1,4 +1,5 @@
 import { VBAModule } from '@/types/index'
+import type { SearchIndex } from '@/core/symbol-index'
 
 export interface ProjectStats {
   totalFiles: number
@@ -20,4 +21,5 @@ export interface ProjectStats {
 export interface AnalysisResult {
   modules: VBAModule[]
   stats: ProjectStats
+  symbolIndex: SearchIndex
 }

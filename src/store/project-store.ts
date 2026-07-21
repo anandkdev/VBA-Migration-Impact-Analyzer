@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { VBAFile, VBAModule, Procedure } from '@/types/index'
 import type { ProjectStats } from '@/core/types'
+import type { SearchIndex } from '@/core/symbol-index'
 
 interface NavigationState {
   activeSection: string
@@ -18,12 +19,14 @@ interface ProjectState extends NavigationState {
   files: VBAFile[]
   modules: VBAModule[]
   stats: ProjectStats | null
+  symbolIndex: SearchIndex | null
+  activeMatchRange: { start: number; end: number } | null
   setProjectName: (name: string) => void
   addFile: (file: VBAFile) => void
   addModule: (module: VBAModule) => void
-  setProject: (files: VBAFile[], modules: VBAModule[], stats: ProjectStats) => void
+  setProject: (files: VBAFile[], modules: VBAModule[], stats: ProjectStats, symbolIndex: SearchIndex) => void
   setActiveSection: (section: string) => void
-  setActiveFile: (fileId: string | null, lineNumber?: number) => void
+  setActiveFile: (fileId: string | null, lineNumber?: number, matchRange?: { start: number; end: number } | null) => void
   setActiveLineNumber: (lineNumber: number | null) => void
   setActiveSearch: (term: string | null, resultId?: string | null) => void
   setSelectedProcedure: (procedure: Procedure | null) => void
@@ -38,6 +41,8 @@ export const useProjectStore = create<ProjectState>((set) => ({
   files: [],
   modules: [],
   stats: null,
+  symbolIndex: null,
+  activeMatchRange: null,
   activeSection: 'dashboard',
   activeFileId: null,
   activeLineNumber: null,
@@ -59,14 +64,15 @@ export const useProjectStore = create<ProjectState>((set) => ({
       modules: [...state.modules, module],
     })),
 
-  setProject: (files, modules, stats) => set({ files, modules, stats }),
+  setProject: (files, modules, stats, symbolIndex) => set({ files, modules, stats, symbolIndex }),
 
   setActiveSection: (section) => set({ activeSection: section }),
 
-  setActiveFile: (fileId, lineNumber) =>
+  setActiveFile: (fileId, lineNumber, matchRange) =>
     set({
       activeFileId: fileId,
       activeLineNumber: lineNumber ?? null,
+      activeMatchRange: matchRange ?? null,
     }),
 
   setActiveLineNumber: (lineNumber) => set({ activeLineNumber: lineNumber }),
@@ -98,6 +104,8 @@ export const useProjectStore = create<ProjectState>((set) => ({
       files: [],
       modules: [],
       stats: null,
+      symbolIndex: null,
+      activeMatchRange: null,
       activeSection: 'dashboard',
       activeFileId: null,
       activeLineNumber: null,

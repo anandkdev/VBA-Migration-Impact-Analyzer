@@ -104,7 +104,8 @@ interface MonacoViewerProps {
 
 export function MonacoViewer({ file }: MonacoViewerProps) {
   const editorRef = useRef<any>(null)
-  const { activeLineNumber } = useProjectStore()
+  const decorationsRef = useRef<any>(null)
+  const { activeLineNumber, activeMatchRange } = useProjectStore()
 
   const handleEditorDidMount = (editor: any, monaco: Monaco) => {
     editorRef.current = editor
@@ -117,6 +118,35 @@ export function MonacoViewer({ file }: MonacoViewerProps) {
       editorRef.current.setPosition({ lineNumber: activeLineNumber, column: 1 })
     }
   }, [activeLineNumber])
+
+  useEffect(() => {
+    if (!editorRef.current) return
+
+    // Clear previous decorations
+    if (decorationsRef.current) {
+      editorRef.current.deltaDecorations(decorationsRef.current, [])
+      decorationsRef.current = null
+    }
+
+    // Add new decorations if match range exists
+    if (activeLineNumber && activeMatchRange) {
+      const newDecorations = [
+        {
+          range: new (window as any).monaco.Range(
+            activeLineNumber,
+            activeMatchRange.start + 1,
+            activeLineNumber,
+            activeMatchRange.end + 1
+          ),
+          options: {
+            inlineClassName: 'bg-yellow-400/40',
+            isWholeLine: false,
+          },
+        },
+      ]
+      decorationsRef.current = editorRef.current.deltaDecorations([], newDecorations)
+    }
+  }, [activeLineNumber, activeMatchRange])
 
   if (!file) {
     return (

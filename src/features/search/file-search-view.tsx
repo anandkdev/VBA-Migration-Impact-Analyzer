@@ -9,6 +9,7 @@ import { SearchGroup } from '@/components/search/search-group'
 import { SearchPreview } from '@/components/search/search-preview'
 import { SearchResultSkeleton } from '@/components/loaders/skeleton-loader'
 import { useProjectStore } from '@/store/project-store'
+import { useSettingsStore } from '@/store/settings-store'
 import { fileSearchService } from '@/features/search/file-search-service'
 import { SearchOptions, FileMatchGroup } from '@/features/search/file-search-index'
 
@@ -29,6 +30,8 @@ export function FileSearchView() {
     setActiveFile,
   } = useProjectStore()
 
+  const { searchOptions: savedSearchOptions, updateSearchOptions } = useSettingsStore()
+
   const [query, setQuery] = useState(activeSearchTerm || '')
   const [showOptions, setShowOptions] = useState(false)
   const [results, setResults] = useState<FileMatchGroup[]>([])
@@ -37,12 +40,9 @@ export function FileSearchView() {
   const [selectedFileId, setSelectedFileId] = useState<string | null>(null)
   const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null)
 
-  const [searchOptions, setSearchOptions] = useState<Partial<SearchOptions>>({
-    caseSensitive: false,
-    wholeWord: false,
-    matchRegex: false,
-    ignoreComments: true,
-  })
+  const [searchOptions, setSearchOptions] = useState<Partial<SearchOptions>>(
+    savedSearchOptions
+  )
 
   // Initialize search index when files change
   useEffect(() => {
@@ -76,6 +76,11 @@ export function FileSearchView() {
     performSearch()
   }, [query, searchOptions])
 
+  // Persist search options to settings store
+  useEffect(() => {
+    updateSearchOptions(searchOptions)
+  }, [searchOptions, updateSearchOptions])
+
   // Update global search term
   useEffect(() => {
     setActiveSearch(query || null)
@@ -93,9 +98,15 @@ export function FileSearchView() {
     fileId: string,
     lineNumber: number
   ) => {
+    // Find the match to get its range for highlighting
+    const fileGroup = results.find((g) => g.file.id === fileId)
+    const match = fileGroup?.matches.find((m) => m.id === matchId)
+
     setSelectedFileId(fileId)
     setSelectedMatchId(matchId)
-    setActiveFile(fileId, lineNumber)
+
+    const matchRange = match ? { start: match.matchStart, end: match.matchEnd } : null
+    setActiveFile(fileId, lineNumber, matchRange)
   }
 
   // Handle close preview
